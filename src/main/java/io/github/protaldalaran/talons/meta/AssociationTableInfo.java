@@ -1,4 +1,4 @@
-package com.yutoudev.talons.meta;
+package io.github.protaldalaran.talons.meta;
 
 
 import com.baomidou.mybatisplus.core.metadata.TableInfo;
@@ -6,8 +6,8 @@ import com.baomidou.mybatisplus.core.metadata.TableInfoHelper;
 import com.baomidou.mybatisplus.core.toolkit.ObjectUtils;
 import com.baomidou.mybatisplus.extension.toolkit.SqlHelper;
 import com.google.common.collect.Lists;
-import com.yutoudev.talons.annotation.*;
-import com.yutoudev.talons.exception.TalonsException;
+import io.github.protaldalaran.talons.exception.TalonsException;
+import io.github.protaldalaran.talons.annotation.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;

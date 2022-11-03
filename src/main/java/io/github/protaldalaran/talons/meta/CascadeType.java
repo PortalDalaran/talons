@@ -1,4 +1,4 @@
-package com.yutoudev.talons.meta;
+package io.github.protaldalaran.talons.meta;
 
 public enum CascadeType {
 

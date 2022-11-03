@@ -4,23 +4,34 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>com.yutoudev</groupId>
+    <groupId>io.github.protaldalaran</groupId>
     <artifactId>talons</artifactId>
-    <version>1.0</version>
+    <version>0.0.1</version>
     <packaging>jar</packaging>
 
     <name>${project.artifactId}</name>
     <description>对于Mybatis plu的扩展工具，包括关联表查询，以及级联保存、更新、删除</description>
-    <url>https://github.com/NoneAron/talons</url>
+    <url>https://github.com/PortalDalaran/talons</url>
 
     <properties>
         <maven.compiler.source>8</maven.compiler.source>
         <maven.compiler.target>8</maven.compiler.target>
+        <!-- 打包时跳过测试 -->
+        <skipTests>true</skipTests>
         <lombok.version>1.18.24</lombok.version>
         <spring.core.version>5.3.20</spring.core.version>
         <mybatis-plus.version>3.5.2</mybatis-plus.version>
         <commons.lang3.version>3.12.0</commons.lang3.version>
         <guava.version>31.1-jre</guava.version>
+
+
+        <!-- 服务id 也就是setting.xml中的servers.server.id -->
+        <serverId>ossrh</serverId>
+        <gpg.keyname>0xD467BD76</gpg.keyname>
+        <project.url>https://github.com/PortalDalaran/talons.git</project.url>
+        <!--项目编码-->
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
     </properties>
     <dependencies>
         <dependency>
@@ -50,4 +61,125 @@
             <version>${guava.version}</version>
         </dependency>
     </dependencies>
+    <issueManagement>
+        <system>github</system>
+        <url>https://github.com/PortalDalaran/talons/issues</url>
+    </issueManagement>
+    <scm>
+        <url>https://github.com/PortalDalaran/talons</url>
+        <connection>scm:git:https://github.com/PortalDalaran/talons.git</connection>
+        <developerConnection>scm:git:https://github.com/PortalDalaran/talons.git</developerConnection>
+    </scm>
+<!--    <scm>-->
+<!--        <url>${project.url}</url>-->
+<!--        <connection>${project.url}</connection>-->
+<!--        <developerConnection>${project.url}</developerConnection>-->
+<!--    </scm>-->
+    <developers>
+        <developer>
+            <id>aohee</id>
+            <name>aohee</name>
+            <email>aohee@163.com</email>
+            <url>${project.url}</url>
+            <timezone>+8</timezone>
+        </developer>
+        <developer>
+            <id>shinyatime</id>
+            <name>shinyatime</name>
+            <email>shinyatan@sina.com</email>
+            <url>${project.url}</url>
+            <timezone>+8</timezone>
+        </developer>
+    </developers>
+
+    <licenses>
+        <license>
+            <name>MIT License</name>
+            <url>https://github.com/PortalDalaran/talons/blob/main/LICENSE</url>
+        </license>
+    </licenses>
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <configuration>
+                    <source>${maven.compiler.source}</source>
+                    <target>${maven.compiler.target}</target>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-source-plugin</artifactId>
+                <version>2.2.1</version>
+                <executions>
+                    <execution>
+                        <id>attach-sources</id>
+                        <goals>
+                            <goal>jar-no-fork</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-javadoc-plugin</artifactId>
+                <version>2.9.1</version>
+                <configuration>
+                    <additionalparam>-Xdoclint:none</additionalparam>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>attach-javadocs</id>
+                        <goals>
+                            <goal>jar</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-gpg-plugin</artifactId>
+                <version>1.5</version>
+                <executions>
+                    <execution>
+                        <id>sign-artifacts</id>
+                        <phase>verify</phase>
+                        <goals>
+                            <goal>sign</goal>
+                        </goals>
+                        <configuration>
+                            <keyname>${gpg.keyname}</keyname>
+                            <passphraseServerId>${gpg.keyname}</passphraseServerId>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-deploy-plugin</artifactId>
+            </plugin>
+            <plugin>
+                <groupId>org.sonatype.plugins</groupId>
+                <artifactId>nexus-staging-maven-plugin</artifactId>
+                <version>1.6.7</version>
+                <extensions>true</extensions>
+                <configuration>
+                    <serverId>${serverId}</serverId>
+                    <nexusUrl>https://s01.oss.sonatype.org/</nexusUrl>
+                    <autoReleaseAfterClose>true</autoReleaseAfterClose>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+    <distributionManagement>
+        <snapshotRepository>
+            <id>${serverId}</id><!--与settings.xml的server.id保持一致-->
+            <url>https://s01.oss.sonatype.org/content/repositories/snapshots</url>
+        </snapshotRepository>
+        <repository>
+            <id>${serverId}</id><!--与settings.xml的server.id保持一致-->
+            <url>https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/</url>
+        </repository>
+    </distributionManagement>
 </project>

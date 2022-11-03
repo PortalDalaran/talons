@@ -1,16 +1,12 @@
-package com.yutoudev.talons.annotation;
+package io.github.protaldalaran.talons.annotation;
 
-import com.yutoudev.talons.meta.CascadeType;
+import io.github.protaldalaran.talons.meta.CascadeType;
 import org.apache.ibatis.mapping.FetchType;
 
 import java.lang.annotation.*;
 
 /**
- * @author wangxiaoli
- * @version 0.1
- * @description TODO
- * @date 2021/3/25 00:04
- * @email aohee@163.com
+ * @author aohee@163.com
  */
 @Target({ElementType.FIELD})
 @Retention(RetentionPolicy.RUNTIME)

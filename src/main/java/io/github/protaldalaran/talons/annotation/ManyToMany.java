@@ -1,7 +1,7 @@
-package com.yutoudev.talons.annotation;
+package io.github.protaldalaran.talons.annotation;
 
 
-import com.yutoudev.talons.meta.CascadeType;
+import io.github.protaldalaran.talons.meta.CascadeType;
 import org.apache.ibatis.mapping.FetchType;
 
 import java.lang.annotation.Retention;
@@ -12,8 +12,7 @@ import static java.lang.annotation.ElementType.METHOD;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
- * @author wangxiaoli
- * @description
+ * @author aohee@163.com
  */
 @Target({METHOD, FIELD})
 @Retention(RUNTIME)

@@ -1,4 +1,4 @@
-package com.yutoudev.talons.core;
+package io.github.protaldalaran.talons.core;
 
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
@@ -13,13 +13,13 @@ import com.baomidou.mybatisplus.core.toolkit.ReflectionKit;
 import com.baomidou.mybatisplus.extension.toolkit.SqlHelper;
 import com.google.common.base.Joiner;
 import com.google.common.collect.Lists;
-import com.yutoudev.talons.annotation.JoinColumn;
-import com.yutoudev.talons.exception.TalonsException;
-import com.yutoudev.talons.meta.AssociationFieldInfo;
-import com.yutoudev.talons.meta.AssociationTableInfo;
-import com.yutoudev.talons.meta.CascadeType;
-import com.yutoudev.talons.utils.ReflectionUtils;
-import com.yutoudev.talons.utils.TalonsUtils;
+import io.github.protaldalaran.talons.annotation.JoinColumn;
+import io.github.protaldalaran.talons.exception.TalonsException;
+import io.github.protaldalaran.talons.meta.AssociationFieldInfo;
+import io.github.protaldalaran.talons.meta.AssociationTableInfo;
+import io.github.protaldalaran.talons.meta.CascadeType;
+import io.github.protaldalaran.talons.utils.ReflectionUtils;
+import io.github.protaldalaran.talons.utils.TalonsUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.ibatis.binding.MapperMethod;
@@ -37,10 +37,7 @@ import java.util.Objects;
 import java.util.stream.Collectors;
 
 /**
- * @author wangxiaoli
- * @version 0.1
- * @date 2021/11/9 17:31
- * @email aohee@163.com
+ * @author aohee@163.com
  */
 @Slf4j
 @Component
@@ -325,7 +322,6 @@ public class TalonsService {
             try {
                 targetModel = (T) rsFieldInfo.getTargetEntity().newInstance();
             } catch (Exception e) {
-                log.error("实例化关联表出错", e);
                 throw new TalonsException(ERROR_ASSOCIATION_TARGET_ENTITY_NEW_INSTANCE);
             }
             targetMapper.update(targetModel, updateWrapper);

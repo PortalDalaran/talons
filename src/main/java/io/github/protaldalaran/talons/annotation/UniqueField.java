@@ -1,15 +1,11 @@
-package com.yutoudev.talons.annotation;
+package io.github.protaldalaran.talons.annotation;
 
 import java.lang.annotation.*;
 
 /**
  * 增加model，字段值唯一性判断
  *
- * @author wangxiaoli
- * @version 0.1
- * @description TODO
- * @date 2021/3/25 00:04
- * @email aohee@163.com
+ * @author aohee@163.com
  */
 @Target({ElementType.FIELD})
 @Retention(RetentionPolicy.RUNTIME)

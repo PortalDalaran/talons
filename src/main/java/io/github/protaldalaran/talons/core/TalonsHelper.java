@@ -1,8 +1,8 @@
-package com.yutoudev.talons.core;
+package io.github.protaldalaran.talons.core;
 
 import com.baomidou.mybatisplus.core.toolkit.ObjectUtils;
-import com.yutoudev.talons.exception.TalonsException;
-import com.yutoudev.talons.meta.AssociationTableInfo;
+import io.github.protaldalaran.talons.exception.TalonsException;
+import io.github.protaldalaran.talons.meta.AssociationTableInfo;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;

@@ -1,12 +1,12 @@
-package com.yutoudev.talons.meta;
+package io.github.protaldalaran.talons.meta;
 
 
 import com.baomidou.mybatisplus.core.toolkit.ObjectUtils;
+import io.github.protaldalaran.talons.exception.TalonsException;
+import io.github.protaldalaran.talons.utils.TalonsUtils;
 import com.google.common.base.Joiner;
 import com.google.common.collect.Lists;
-import com.yutoudev.talons.annotation.*;
-import com.yutoudev.talons.exception.TalonsException;
-import com.yutoudev.talons.utils.TalonsUtils;
+import io.github.protaldalaran.talons.annotation.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -19,11 +19,7 @@ import java.lang.reflect.Type;
 import java.util.*;
 
 /**
- * @author wangxiaoli
- * @version 0.1
- * @description TODO
- * @date 2021/5/30 21:03
- * @email aohee@163.com
+ * @author aohee@163.com
  */
 @Data
 @AllArgsConstructor

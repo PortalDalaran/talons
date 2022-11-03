@@ -1,4 +1,4 @@
-package com.yutoudev.talons.annotation;
+package io.github.protaldalaran.talons.annotation;
 
 
 import java.lang.annotation.Retention;
@@ -9,9 +9,8 @@ import static java.lang.annotation.ElementType.METHOD;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
- * @author wangxiaoli
- * @description
- * @date 2021/11/12 1:34
+ *
+ * @author aohee@163.com
  */
 @Target({METHOD, FIELD})
 @Retention(RUNTIME)

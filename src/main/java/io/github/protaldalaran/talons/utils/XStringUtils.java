@@ -1,4 +1,4 @@
-package com.yutoudev.talons.utils;
+package io.github.protaldalaran.talons.utils;
 
 
 import com.google.common.collect.Lists;
@@ -6,13 +6,14 @@ import com.google.common.collect.Lists;
 import java.util.List;
 
 /**
- * @author wangxiaoli
+ * @author aohee@163.com
  * @version 0.1
- * @email aohee@163.com
  */
 public class XStringUtils {
     /**
      * 首字母小写
+     * @param str in string
+     * @return string
      */
     public static String toLowerFirstCase(String str) {
         char[] chars = str.toCharArray();
@@ -25,6 +26,8 @@ public class XStringUtils {
 
     /**
      * 首字母大写
+     * @param str in string
+     * @return string
      */
     public static String toUpperFirstCase(String str) {
         char[] chars = str.toCharArray();

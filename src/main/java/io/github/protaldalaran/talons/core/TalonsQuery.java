@@ -1,4 +1,4 @@
-package com.yutoudev.talons.core;
+package io.github.protaldalaran.talons.core;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
@@ -7,12 +7,12 @@ import com.baomidou.mybatisplus.core.metadata.TableInfoHelper;
 import com.baomidou.mybatisplus.core.toolkit.ObjectUtils;
 import com.google.common.base.Joiner;
 import com.google.common.collect.Lists;
-import com.yutoudev.talons.annotation.JoinColumn;
-import com.yutoudev.talons.exception.TalonsException;
-import com.yutoudev.talons.meta.AssociationFieldInfo;
-import com.yutoudev.talons.meta.AssociationTableInfo;
-import com.yutoudev.talons.utils.ReflectionUtils;
-import com.yutoudev.talons.utils.TalonsUtils;
+import io.github.protaldalaran.talons.annotation.JoinColumn;
+import io.github.protaldalaran.talons.exception.TalonsException;
+import io.github.protaldalaran.talons.meta.AssociationFieldInfo;
+import io.github.protaldalaran.talons.meta.AssociationTableInfo;
+import io.github.protaldalaran.talons.utils.ReflectionUtils;
+import io.github.protaldalaran.talons.utils.TalonsUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.ibatis.session.SqlSession;
 import org.springframework.beans.factory.ObjectFactory;

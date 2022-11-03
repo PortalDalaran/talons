@@ -1,4 +1,4 @@
-package com.yutoudev.talons.utils;
+package io.github.protaldalaran.talons.utils;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.Validate;
@@ -8,10 +8,7 @@ import java.lang.reflect.*;
 /**
  * 反射工具类. 提供调用getter/setter方法, 访问私有变量, 调用私有方法, 获取泛型类型Class, 被AOP过的真实类等工具函数.
  *
- * @author calvin
- * @version 2013-01-15
  */
-@SuppressWarnings("rawtypes")
 public class ReflectionUtils {
 
     private static final String SETTER_PREFIX = "set";
@@ -19,13 +16,18 @@ public class ReflectionUtils {
     private static final String GETTER_PREFIX = "get";
 
     private static final String CGLIB_CLASS_SEPARATOR = "$$";
+    private static final String SEPARATOR_CHARS = ".";
 
     /**
      * 调用Getter方法. 支持多级，如：对象名.对象名.方法
+     * value by invoke entity property get method
+     * @param obj  entity
+     * @param propertyName name
+     * @return object
      */
     public static Object invokeGetter(Object obj, String propertyName) {
         Object object = obj;
-        for (String name : StringUtils.split(propertyName, ".")) {
+        for (String name : StringUtils.split(propertyName, SEPARATOR_CHARS)) {
             String getterMethodName = GETTER_PREFIX + StringUtils.capitalize(name);
             object = invokeMethod(object, getterMethodName, new Class[]{}, new Object[]{});
         }
@@ -34,6 +36,9 @@ public class ReflectionUtils {
 
     /**
      * 调用Setter方法, 仅匹配方法名。 支持多级，如：对象名.对象名.方法
+     * @param obj entity
+     * @param propertyName string
+     * @param value name-value
      */
     public static void invokeSetter(Object obj, String propertyName, Object value) {
         Object object = obj;
@@ -51,6 +56,9 @@ public class ReflectionUtils {
 
     /**
      * 直接读取对象属性值, 无视private/protected修饰符, 不经过getter函数.
+     * @param obj entity
+     * @param fieldName fieldName
+     * @return Object
      */
     public static Object getFieldValue(final Object obj, final String fieldName) {
         Field field = getAccessibleField(obj, fieldName);

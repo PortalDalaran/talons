@@ -1,4 +1,4 @@
-package com.yutoudev.talons.exception;
+package io.github.protaldalaran.talons.exception;
 
 /**
  * @author david

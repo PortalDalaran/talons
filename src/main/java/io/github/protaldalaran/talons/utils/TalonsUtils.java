@@ -1,4 +1,4 @@
-package com.yutoudev.talons.utils;
+package io.github.protaldalaran.talons.utils;
 
 import com.baomidou.mybatisplus.core.metadata.TableFieldInfo;
 import com.baomidou.mybatisplus.core.metadata.TableInfo;
@@ -7,6 +7,9 @@ import com.google.common.collect.Lists;
 import java.util.List;
 import java.util.Objects;
 
+/**
+ * @author aohee@163.com
+ */
 public class TalonsUtils {
     public static final String ID_SUFFIX = "Id";
     /**
@@ -14,8 +17,8 @@ public class TalonsUtils {
      * 1、去掉DO之类的后缀，
      * 2、加上主键
      * 3、小写开头
-     * @param name
-     * @return
+     * @param name string
+     * @return string
      */
     public static String guessReferencedColumnName(String name) {
         return guessMapperClassName(XStringUtils.toLowerFirstCase(name)) + ID_SUFFIX;
@@ -23,12 +26,12 @@ public class TalonsUtils {
 
     /**
      * 去掉Entity类，后边特定的结尾字符
-     * @param entityClassName
-     * @return
+     * @param entityClassName classNameString
+     * @return string
      */
     public static String guessMapperClassName(String entityClassName) {
         //以特定字符结尾的持久化对象
-        List<String> lastCharList = Lists.newArrayList("DO");
+        List<String> lastCharList = Lists.newArrayList("DO","PO");
         for (String lastChar : lastCharList) {
             if (entityClassName.endsWith(lastChar)) {
                 entityClassName = entityClassName.substring(0, entityClassName.lastIndexOf(lastChar));
@@ -41,9 +44,9 @@ public class TalonsUtils {
     /**
      * 在mybatis plus中找java字段名对应的数据库字段名
      *
-     * @param javaFieldName
-     * @param tableInfo
-     * @return
+     * @param javaFieldName string
+     * @param tableInfo mybatis plus class
+     * @return string
      */
     public static String getDataBaseColumnName(String javaFieldName, TableInfo tableInfo) {
         String finalJavaFieldName = javaFieldName;
