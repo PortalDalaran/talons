@@ -1,4 +1,4 @@
-package io.github.protaldalaran.talons.core;
+package io.github.portaldalaran.talons.core;
 
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
@@ -13,13 +13,13 @@ import com.baomidou.mybatisplus.core.toolkit.ReflectionKit;
 import com.baomidou.mybatisplus.extension.toolkit.SqlHelper;
 import com.google.common.base.Joiner;
 import com.google.common.collect.Lists;
-import io.github.protaldalaran.talons.annotation.JoinColumn;
-import io.github.protaldalaran.talons.exception.TalonsException;
-import io.github.protaldalaran.talons.meta.AssociationFieldInfo;
-import io.github.protaldalaran.talons.meta.AssociationTableInfo;
-import io.github.protaldalaran.talons.meta.CascadeType;
-import io.github.protaldalaran.talons.utils.ReflectionUtils;
-import io.github.protaldalaran.talons.utils.TalonsUtils;
+import io.github.portaldalaran.talons.annotation.JoinColumn;
+import io.github.portaldalaran.talons.exception.TalonsException;
+import io.github.portaldalaran.talons.meta.AssociationTableInfo;
+import io.github.portaldalaran.talons.meta.CascadeType;
+import io.github.portaldalaran.talons.utils.ReflectionUtils;
+import io.github.portaldalaran.talons.utils.TalonsUtils;
+import io.github.portaldalaran.talons.meta.AssociationFieldInfo;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.ibatis.binding.MapperMethod;

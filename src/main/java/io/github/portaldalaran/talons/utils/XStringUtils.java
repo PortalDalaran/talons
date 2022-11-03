@@ -1,4 +1,4 @@
-package io.github.protaldalaran.talons.utils;
+package io.github.portaldalaran.talons.utils;
 
 
 import com.google.common.collect.Lists;

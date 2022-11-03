@@ -1,4 +1,4 @@
-package io.github.protaldalaran.talons.exception;
+package io.github.portaldalaran.talons.exception;
 
 /**
  * @author david

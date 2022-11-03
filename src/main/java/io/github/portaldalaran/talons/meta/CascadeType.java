@@ -1,4 +1,4 @@
-package io.github.protaldalaran.talons.meta;
+package io.github.portaldalaran.talons.meta;
 
 public enum CascadeType {
 

@@ -1,4 +1,4 @@
-package io.github.protaldalaran.talons.annotation;
+package io.github.portaldalaran.talons.annotation;
 
 import java.lang.annotation.*;
 

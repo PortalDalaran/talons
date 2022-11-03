@@ -1,4 +1,4 @@
-package io.github.protaldalaran.talons.utils;
+package io.github.portaldalaran.talons.utils;
 
 import com.baomidou.mybatisplus.core.metadata.TableFieldInfo;
 import com.baomidou.mybatisplus.core.metadata.TableInfo;

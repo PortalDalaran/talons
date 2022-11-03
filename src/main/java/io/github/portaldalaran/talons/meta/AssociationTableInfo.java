@@ -1,4 +1,4 @@
-package io.github.protaldalaran.talons.meta;
+package io.github.portaldalaran.talons.meta;
 
 
 import com.baomidou.mybatisplus.core.metadata.TableInfo;
@@ -6,8 +6,8 @@ import com.baomidou.mybatisplus.core.metadata.TableInfoHelper;
 import com.baomidou.mybatisplus.core.toolkit.ObjectUtils;
 import com.baomidou.mybatisplus.extension.toolkit.SqlHelper;
 import com.google.common.collect.Lists;
-import io.github.protaldalaran.talons.exception.TalonsException;
-import io.github.protaldalaran.talons.annotation.*;
+import io.github.portaldalaran.talons.annotation.*;
+import io.github.portaldalaran.talons.exception.TalonsException;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -35,14 +35,6 @@ public class AssociationTableInfo<T> {
     private List<AssociationFieldInfo> oneToManys;
     private List<AssociationFieldInfo> manyToOnes;
     private List<AssociationFieldInfo> manyToManys;
-
-    public List<AssociationFieldInfo> getAnnotations() {
-        List<AssociationFieldInfo> annotations = new ArrayList<>();
-        annotations.addAll(oneToManys);
-        annotations.addAll(manyToOnes);
-        annotations.addAll(manyToManys);
-        return annotations;
-    }
 
     /**
      * 根据实体对象，从注解里初始化表关系
@@ -135,5 +127,13 @@ public class AssociationTableInfo<T> {
             one2Manys.add(associationField);
         }
         return one2Manys;
+    }
+
+    public List<AssociationFieldInfo> getAnnotations() {
+        List<AssociationFieldInfo> annotations = new ArrayList<>();
+        annotations.addAll(oneToManys);
+        annotations.addAll(manyToOnes);
+        annotations.addAll(manyToManys);
+        return annotations;
     }
 }

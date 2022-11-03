@@ -1,6 +1,6 @@
-package io.github.protaldalaran.talons.annotation;
+package io.github.portaldalaran.talons.annotation;
 
-import io.github.protaldalaran.talons.meta.CascadeType;
+import io.github.portaldalaran.talons.meta.CascadeType;
 import org.apache.ibatis.mapping.FetchType;
 
 import java.lang.annotation.*;

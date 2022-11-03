@@ -1,12 +1,12 @@
-package io.github.protaldalaran.talons.meta;
+package io.github.portaldalaran.talons.meta;
 
 
 import com.baomidou.mybatisplus.core.toolkit.ObjectUtils;
-import io.github.protaldalaran.talons.exception.TalonsException;
-import io.github.protaldalaran.talons.utils.TalonsUtils;
 import com.google.common.base.Joiner;
 import com.google.common.collect.Lists;
-import io.github.protaldalaran.talons.annotation.*;
+import io.github.portaldalaran.talons.annotation.*;
+import io.github.portaldalaran.talons.exception.TalonsException;
+import io.github.portaldalaran.talons.utils.TalonsUtils;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;

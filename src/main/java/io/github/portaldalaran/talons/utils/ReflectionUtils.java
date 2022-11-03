@@ -1,4 +1,4 @@
-package io.github.protaldalaran.talons.utils;
+package io.github.portaldalaran.talons.utils;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.Validate;

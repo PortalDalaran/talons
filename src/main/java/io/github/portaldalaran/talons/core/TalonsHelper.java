@@ -1,8 +1,8 @@
-package io.github.protaldalaran.talons.core;
+package io.github.portaldalaran.talons.core;
 
 import com.baomidou.mybatisplus.core.toolkit.ObjectUtils;
-import io.github.protaldalaran.talons.exception.TalonsException;
-import io.github.protaldalaran.talons.meta.AssociationTableInfo;
+import io.github.portaldalaran.talons.exception.TalonsException;
+import io.github.portaldalaran.talons.meta.AssociationTableInfo;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;

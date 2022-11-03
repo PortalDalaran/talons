@@ -1,4 +1,4 @@
-package io.github.protaldalaran.talons.meta;
+package io.github.portaldalaran.talons.meta;
 
 /**
  * 抓取关联表对象类型
