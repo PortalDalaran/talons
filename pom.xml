@@ -6,11 +6,14 @@
 
     <groupId>io.github.portaldalaran</groupId>
     <artifactId>talons</artifactId>
-    <version>0.0.1</version>
+    <version>1.0.1</version>
     <packaging>jar</packaging>
 
     <name>${project.artifactId}</name>
-    <description>对于Mybatis plu的扩展工具，包括关联表查询，以及级联保存、更新、删除</description>
+    <description>
+        Expand the toolkit for query, save, and delete Mybatis plus entity associations
+        对于Mybatis plu的扩展工具，包括关联表查询，以及级联保存、更新、删除
+    </description>
     <url>https://github.com/PortalDalaran/talons</url>
 
     <properties>

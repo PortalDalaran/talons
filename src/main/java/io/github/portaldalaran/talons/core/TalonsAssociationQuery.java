@@ -9,44 +9,39 @@ import com.google.common.base.Joiner;
 import com.google.common.collect.Lists;
 import io.github.portaldalaran.talons.annotation.JoinColumn;
 import io.github.portaldalaran.talons.exception.TalonsException;
+import io.github.portaldalaran.talons.meta.AssociationFieldInfo;
+import io.github.portaldalaran.talons.meta.AssociationQueryField;
 import io.github.portaldalaran.talons.meta.AssociationTableInfo;
 import io.github.portaldalaran.talons.utils.ReflectionUtils;
 import io.github.portaldalaran.talons.utils.TalonsUtils;
-import io.github.portaldalaran.talons.meta.AssociationFieldInfo;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.ibatis.session.SqlSession;
 import org.springframework.beans.factory.ObjectFactory;
 import org.springframework.cglib.proxy.Enhancer;
 import org.springframework.cglib.proxy.LazyLoader;
-import org.springframework.stereotype.Component;
 
-import javax.annotation.Resource;
 import java.util.*;
 import java.util.stream.Collectors;
 
 /**
- * @author wangxiaoli
- * @version 0.1
- * @date 2021/11/9 23:51
- * @email aohee@163.com
+ * @author aohee@163.com
  */
-@Component
-public class TalonsQuery {
-    @Resource
-    ObjectFactory<SqlSession> factory;
-    /**
-     * Map<String, String> 接口传入的针对关联对象的返回字段，比如 user.name = select name from user where id=userid
-     */
-    private Map<String, String> queryAssFields;
+public class TalonsAssociationQuery {
+    private ObjectFactory<SqlSession> factory;
+    private Map<String, String> queryAssFields = new HashMap<>();
 
-    public <M> M query(M model, AssociationTableInfo<M> assTableInfo, Map<String, String> queryAssociationFieldMap) throws TalonsException {
-        queryAssFields = queryAssociationFieldMap;
+    public void setFactory(ObjectFactory<SqlSession> factory) {
+        this.factory = factory;
+    }
+
+    public <M> M query(M model, AssociationTableInfo<M> assTableInfo, List<AssociationQueryField> assQueryFields) throws TalonsException {
+        if (!Objects.isNull(assQueryFields)) {
+            assQueryFields.forEach(f -> queryAssFields.put(f.getTableName(), f.getParameters()));
+        }
         //proc ManyToOne
         List<AssociationFieldInfo> m2os = assTableInfo.getManyToOnes();
-        //是listMaps的情况下，应该查看对应的对象ID是否在maplist里存在
         if (ObjectUtils.isNotEmpty(m2os)) {
             for (AssociationFieldInfo assField : m2os) {
-                //如果有自定义查询字段，当前关联字段不在查询字段内则不显示
                 if (queryAssFields.size() > 0 && !queryAssFields.containsKey(assField.getField().getName())) {
                     continue;
                 }
@@ -55,10 +50,8 @@ public class TalonsQuery {
         }
         //proc OneToMany
         List<AssociationFieldInfo> o2ms = assTableInfo.getOneToManys();
-        //无法判断map里的值是不是有，如果没有XXX了，应该是虚拟对象，判断select里有值没，如果有值就直接显示，如果没有就查询一次
         if (ObjectUtils.isNotEmpty(o2ms)) {
             for (AssociationFieldInfo assField : o2ms) {
-                //如果有自定义查询字段，且当前关联字段不在查询字段内则不显示
                 if (queryAssFields.size() > 0 && !queryAssFields.containsKey(assField.getField().getName())) {
                     continue;
                 }
@@ -71,6 +64,7 @@ public class TalonsQuery {
         if (ObjectUtils.isNotEmpty(m2ms)) {
             for (AssociationFieldInfo assField : m2ms) {
                 //如果有自定义查询字段，当前关联字段不在查询字段内则不显示
+                //If there is a user-defined query field, the current associated field will not be displayed if it is not in the query field
                 if (queryAssFields.size() > 0 && !queryAssFields.containsKey(assField.getField().getName())) {
                     continue;
                 }
@@ -81,16 +75,15 @@ public class TalonsQuery {
     }
 
     /**
+     * 处理多对一的情况
      * T entity 为Map<String, Object> 或者 Model 根据传入的list决定
      * Map<String, Object> 查询方法使用selectMaps或者pageMaps，返回结果集为Map的传入，可为空
      * T  当前实体，当查访方法返回结果集为实体时，则把值注入model
      *
      * @param entity
      * @param assField
-     * @description 处理多对一的情况 @//
-     * @return: void
-     * @author wangxiaoli
-     * @date 2021/9/16 00:07
+     * @param <M>
+     * @param <T>
      */
     private <M, T> void queryManyToOneField(M entity, AssociationFieldInfo assField) {
         String columnName = "";
@@ -207,7 +200,7 @@ public class TalonsQuery {
             String mappedBy = assField.getOneToMany().mappedBy();
             if (StringUtils.isNotEmpty(mappedBy)) {
                 String keyProperty = assTable.getTableInfo().getKeyProperty();
-                targetWrapper.eq(TalonsUtils.getDataBaseColumnName(mappedBy,targetTableInfo), getEntityFieldValue(entity, keyProperty));
+                targetWrapper.eq(TalonsUtils.getDataBaseColumnName(mappedBy, targetTableInfo), getEntityFieldValue(entity, keyProperty));
             }
         }
 
@@ -367,7 +360,7 @@ public class TalonsQuery {
      * 同时组装主表与中间表 Wrapper 查询where条件
      *
      * @param entity           主表实体
-     * @param assField        主表关联字段
+     * @param assField         主表关联字段
      * @param joinTableWrapper 中间表查询Wrapper
      * @param <M>              主表类型
      * @param <J>              中间表类型

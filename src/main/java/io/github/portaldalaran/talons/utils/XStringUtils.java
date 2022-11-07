@@ -1,10 +1,6 @@
 package io.github.portaldalaran.talons.utils;
 
 
-import com.google.common.collect.Lists;
-
-import java.util.List;
-
 /**
  * @author aohee@163.com
  * @version 0.1

@@ -1,45 +1,57 @@
 package io.github.portaldalaran.talons.core;
 
 import com.baomidou.mybatisplus.core.toolkit.ObjectUtils;
+import com.google.common.collect.Lists;
 import io.github.portaldalaran.talons.exception.TalonsException;
+import io.github.portaldalaran.talons.meta.AssociationQueryField;
 import io.github.portaldalaran.talons.meta.AssociationTableInfo;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
-import javax.annotation.Resource;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * @author wangxiaoli
- * @version 0.1
- * @description 基于Mybatisplus，不想写resultmap,自动处理result map帮助类
- * @date 2021/9/13 20:00
- * @email aohee@163.com
+ * 基于Mybatisplus，不想写resultmap,自动处理result map帮助类
+ *
+ * Based on Mybatisplus, you don't want to write a resultmap, and automatically process the help class of the result map
+ *
+ * @author aohee@163.com
  */
 @Slf4j
-@Component
+//@Component
 public class TalonsHelper {
 
     /**
      * 储存实体关系信息
+     * Store entity relationship information
      */
     private static Map<Class<?>, AssociationTableInfo> ASSOCIATION_TABLE_MAP = new ConcurrentHashMap<>();
 
-    @Resource
-    private TalonsService talonsService;
-    @Resource
-    private TalonsQuery talonsQuery;
+//    @Resource
+    private TalonsAssociationService talonsAssociationService;
+//    @Resource
+    private TalonsAssociationQuery talonsAssociationQuery;
+
+    public void setTalonsAssociationService(TalonsAssociationService talonsAssociationService) {
+        this.talonsAssociationService = talonsAssociationService;
+    }
+
+    public void setTalonsAssociationQuery(TalonsAssociationQuery talonsAssociationQuery) {
+        this.talonsAssociationQuery = talonsAssociationQuery;
+    }
 
     /**
-     * @description 根据实体对象，从注解里初始化表关系
-     * @return: AssociationTableInfo
-     * @author wangxiaoli
-     * @date 2021/9/13 21:29
+     * 根据实体对象，从注解里初始化表关系
+     *
+     * Initialize table relationships from annotations based on entity objects
+     *
+     * @param modelClass
+     * @return
+     * @param <M>
+     * @throws TalonsException
      */
     public static <M> AssociationTableInfo<M> init(Class<M> modelClass) throws TalonsException {
         if (ASSOCIATION_TABLE_MAP.containsKey(modelClass)) {
@@ -53,27 +65,41 @@ public class TalonsHelper {
     /**
      * 处理关联表级联添加和修改<br>
      *
-     *
-     * <Strong>多对一的情况</Strong><br>
+     * 1.多对一的情况<br>
      * 不做处理，直接在对应字段设置为null<br>
      * 没有一对一，一对一请用多对一<br>
      * SaveOrUpdate时，因为关联entity不是数据库对象，所以持久化时应是关联entity对应的xxxId字段直接设置值<br>
-     * <Strong>一对多没有中间表的情况<Strong><br>
+     * 2.一对多没有中间表的情况<br>
      * 由one端主控，没有中间表主控时为单向关系应，有所有关联类型操作<br>
      * 根据判断子表ID是否为空，不为空则update，为空则insert，不在现有列表中的数据库记录则delete<br>
-     * <Strong>一对多有中间表的情况<Strong><br>
+     * 3.一对多有中间表的情况<br>
      * 根据mappedBy判断哪端主控，为空则默认由one端主控<br>
      * 当CascadeType为ALL、PERSIST,自动insert update中间表，先根据主控端关联ID删除中间表和对应的，根据判断子表ID是否为空，不为空则update，为空则insert，<br>
      * 当CascadeType为MERGE时，不能删除实体，可以删除关联表<br>
-     * <Strong>多对多<Strong>
+     * 4.多对多
      * PERSIST、REMOVE 通常在多对多时用得比较少<br>
      * 当CascadeType为ALL、PERSIST,自动insert update中间表，先根据主控端关联ID删除中间表和对应的，根据判断子表ID是否为空，不为空则update，为空则insert，<br>
      * 当CascadeType为MERGE时，不能删除实体，可以删除关联表<br>
      *
-     * @description
+     * Processing cascading addition and modification of association tables
+     * 1. Many to one
+     * Do not process, and directly set the corresponding field to null<br>
+     * No one-to-one, one-to-one please use many to one<br>
+     * When SaveOrUpdate, because the associated entity is not a database object, the value of the xxxId field corresponding to the associated entity should be set directly during persistence<br>
+     * 2. One to many without intermediate table
+     * It is controlled by one end. If there is no intermediate table control, it is a one-way relationship, with all associated type operations<br>
+     * Judge whether the sub table ID is empty, update if it is not empty, insert if it is empty, and delete if the database record is not in the existing list<br>
+     * 3. One to many with intermediate tables
+     * Judge which end is the master according to mappedBy. If it is blank, the one end is the master by default<br>
+     * When CascadeType is ALL and PERSIST, the intermediate table is automatically inserted and updated. First, delete the intermediate table and the corresponding one according to the associated ID of the main control end, and judge whether the sub table ID is empty. If it is not empty, update it, and if it is empty, insert it.<br>
+     * When CascadeType is MERGE, the entity cannot be deleted, and the associated table can be deleted<br>
+     * 4. Many to many
+     * PERSIST and REMOVE are usually seldom used in many to many<br>
+     * When CascadeType is ALL and PERSIST, the intermediate table is automatically inserted and updated. First, delete the intermediate table and the corresponding one according to the associated ID of the main control end, and judge whether the sub table ID is empty. If it is not empty, update it, and if it is empty, insert it.<br>
+     * When CascadeType is MERGE, the entity cannot be deleted, and the associated table can be deleted<br>
+     *
+     * @param <M>
      * @return: M
-     * @author wangxiaoli
-     * @date 2021/9/19 15:03
      */
     @Transactional(rollbackFor = {Exception.class})
     public <M> M saveOrUpdate(M model) throws TalonsException {
@@ -82,34 +108,48 @@ public class TalonsHelper {
         }
         AssociationTableInfo<M> assTableInfo = (AssociationTableInfo<M>) init(model.getClass());
 
-        //处理一对多
-        talonsService.saveOrUpdateOneToManyTable(model, assTableInfo);
-        //处理多对多
-        talonsService.saveOrUpdateManyToManyTable(model, assTableInfo);
+        //处理一对多  Process one to many
+        talonsAssociationService.saveOrUpdateOneToManyTable(model, assTableInfo);
+        //处理多对多 Process many to many
+        talonsAssociationService.saveOrUpdateManyToManyTable(model, assTableInfo);
         return model;
     }
 
 
     /**
      * 处理关联表，级联删除
-     * <Strong>多对一的情况</Strong>
+     * 1.多对一的情况
      * 不做处理，直接在对应字段设置为null
      * 没有一对一，一对一请用多对一
      * SaveOrUpdate时，因为关联entity不是数据库对象，所以持久化时应是关联entity对应的xxxId字段直接设置值
-     * <Strong>一对多没有中间表的情况<Strong>
+     * 2.一对多没有中间表的情况
      * 根据mappedBy判断哪端主控，为空则默认由one端主控，没有中间表主控时为单向关系应，有所有关联类型操作
      * 当CascadeType为ALL、REMOVE时，主控端列表里去掉关联表ID时，则删除关联表对应记录
-     * <Strong>一对多有中间表的情况<Strong>
+     * 3.一对多有中间表的情况
      * 根据mappedBy判断哪端主控，为空则默认由one端主控
      * 当CascadeType为ALL、REMOVE时，主控端列表里去掉关联表ID时，则删除关联表对应记录
-     * <Strong>多对多<Strong>
+     * 4.多对多
      * PERSIST、REMOVE 通常在多对多时用得比较少
      * 当CascadeType为ALL、REMOVE时，主控端列表里去掉关联表ID时，则删除关联表对应记录
      *
-     * @description
-     * @return: M
-     * @author wangxiaoli
-     * @date 2021/9/19 23:01
+     * cascading deletion
+     * 1.Many to one
+     * Do not process, directly set the corresponding field to null
+     * No one-to-one, one-to-one please use many to one
+     * When saving OrUpdate, because the associated entity is not a database object, the value of the xxxId field corresponding to the associated entity should be set directly during persistence
+     * 2.One to many without intermediate table
+     * Judge which end is in charge according to mappedBy. If it is empty, it will be in charge of one end by default. If there is no intermediate table in charge, it is a one-way relationship, with all associated type operations
+     * When CascadeType is ALL or REMOVE, and the associated table ID is removed from the master control side list, the corresponding record of the associated table is deleted
+     * 3.One to many with intermediate tables
+     * Judge which end is in charge according to mappedBy. If it is blank, the one end is in charge by default
+     * When CascadeType is ALL or REMOVE, and the associated table ID is removed from the master control side list, the corresponding record of the associated table is deleted
+     * 4. Many to many
+     * PERSIST and REMOVE are seldom used in many to many
+     * When CascadeType is ALL or REMOVE, and the associated table ID is removed from the master control side list, the corresponding record of the associated table is deleted
+     *
+     * @param model entity
+     * @return model
+     * @throws TalonsException
      */
     @Transactional(rollbackFor = {Exception.class})
     public <M> M remove(M model) throws TalonsException {
@@ -117,8 +157,8 @@ public class TalonsHelper {
             return model;
         }
         AssociationTableInfo<M> assTableInfo = (AssociationTableInfo<M>) init(model.getClass());
-        talonsService.removeOne2ManyTable(model, assTableInfo);
-        talonsService.removeMany2ManyTable(model, assTableInfo);
+        talonsAssociationService.removeOne2ManyTable(model, assTableInfo);
+        talonsAssociationService.removeMany2ManyTable(model, assTableInfo);
 
         return model;
     }
@@ -126,46 +166,39 @@ public class TalonsHelper {
 
     /**
      * 处理关联表查询
+     * Associated Table Query
      *
-     * @param model M 为 Map<String,Object> 或者 M extends BaseModel
-     * @description
-     * @return: M
-     * @author wangxiaoli
-     * @date 2021/9/19 23:05
+     * @param model  M extends baseDO
+     * @return model
+     * @throws TalonsException
      */
     @Transactional(readOnly = true)
     public <M> M query(M model) throws TalonsException {
         AssociationTableInfo<M> assTableInfo = (AssociationTableInfo<M>) init(model.getClass());
-        talonsQuery.query(model, assTableInfo, new HashMap<>(0));
+        talonsAssociationQuery.query(model, assTableInfo, Lists.newArrayList());
         return model;
     }
 
     /**
      * 处理关联表查询
+     * Associated Table Query
      *
-     * @param list                  M 为 Map<String,Object> 或者 M extends BaseModel
-     * @param queryAssociationFieldMap 由接口传入的针对关联对象的返回字段，比如 user.name = select name from user where id=userid
-     * @param modelClass            由于传入的List里M可能为Map<String,Object> 取不到对应实体对象，所以需要传入实体对象Class用于初始化关联字段及SqlSession
-     * @description
-     * @return: java.util.List<M>
-     * @author wangxiaoli
-     * @date 2021/9/19 23:06
+     *
+     * @param list                 M extends BaseDO
+     * @param modelClass
+     * @param associationQueryFields query select parameter, ex: user.name  => {user:'name,sex,age'}
+     * @return
+     * @throws TalonsException
      */
     @Transactional(readOnly = true)
-    public <M> List<M> query(List<M> list, Class modelClass, Map<String, String> queryAssociationFieldMap) throws TalonsException {
+    public <M> List<M> query(List<M> list, Class modelClass, List<AssociationQueryField> associationQueryFields) throws TalonsException {
         if (ObjectUtils.isEmpty(list)) {
             return list;
         }
-        Map<String, String> queryAssFields;
         AssociationTableInfo<M> assTableInfo = init(modelClass);
-        //Map<String, String> 接口传入的针对关联对象的返回字段，比如 user.name = select name from user where id=userid
-        if (ObjectUtils.isEmpty(queryAssociationFieldMap)) {
-            queryAssFields = new HashMap<>(0);
-        } else {
-            queryAssFields = queryAssociationFieldMap;
-        }
+
         for (M genericObject : list) {
-            talonsQuery.query(genericObject, assTableInfo, queryAssFields);
+            talonsAssociationQuery.query(genericObject, assTableInfo, associationQueryFields);
         }
         return list;
     }

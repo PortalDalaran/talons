@@ -15,21 +15,19 @@ import com.google.common.base.Joiner;
 import com.google.common.collect.Lists;
 import io.github.portaldalaran.talons.annotation.JoinColumn;
 import io.github.portaldalaran.talons.exception.TalonsException;
+import io.github.portaldalaran.talons.meta.AssociationFieldInfo;
 import io.github.portaldalaran.talons.meta.AssociationTableInfo;
 import io.github.portaldalaran.talons.meta.CascadeType;
 import io.github.portaldalaran.talons.utils.ReflectionUtils;
 import io.github.portaldalaran.talons.utils.TalonsUtils;
-import io.github.portaldalaran.talons.meta.AssociationFieldInfo;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.ibatis.binding.MapperMethod;
 import org.apache.ibatis.logging.LogFactory;
 import org.apache.ibatis.session.SqlSession;
 import org.springframework.beans.factory.ObjectFactory;
-import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
-import javax.annotation.Resource;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -40,16 +38,20 @@ import java.util.stream.Collectors;
  * @author aohee@163.com
  */
 @Slf4j
-@Component
-public class TalonsService {
+
+public class TalonsAssociationService {
     private static final String ERROR_ASSOCIATION_JOIN_ENTITY_NEW_INSTANCE = "Mybatis Plus拓展关联表，实例化中间实体出错";
 
     private static final String ERROR_ASSOCIATION_TARGET_ENTITY_NEW_INSTANCE = "Mybatis Plus拓展关联表 实例化关联实体出错";
-    @Resource
-    ObjectFactory<SqlSession> factory;
+
+    private ObjectFactory<SqlSession> factory;
 
     private Object getEntityId(Object model) {
         return ReflectionUtils.getFieldValue(model, "id");
+    }
+
+    public void setFactory(ObjectFactory<SqlSession> factory) {
+        this.factory = factory;
     }
 
     @Transactional(rollbackFor = {Exception.class})

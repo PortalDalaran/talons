@@ -17,6 +17,9 @@ public @interface JoinTable {
     /**
      * 中间表名称
      * 默认名为当前实体名称+关联实体名称+s
+     *
+     * Intermediate table name
+     * The default name is current entity name+associated entity name+s
      */
     String name() default "";
 
@@ -24,6 +27,8 @@ public @interface JoinTable {
      * 使用哪个mapper来查询，
      * 默认为I+关联实体名+Mapper
      * 如 User = IUserMapper
+     *
+     * Which mapper is used to query, The default is I+associated entity name+Mapper
      */
     Class<?> mapper() default void.class;
 
