@@ -156,7 +156,7 @@ public class TalonsServiceImpl<M extends BaseMapper<T>, T> extends ServiceImpl<M
         if (isRelational) {
             talonsHelper.remove(getById(id));
         }
-        return true;
+        return SqlHelper.retBool(getBaseMapper().deleteById(id));
     }
 
 
@@ -190,8 +190,7 @@ public class TalonsServiceImpl<M extends BaseMapper<T>, T> extends ServiceImpl<M
                 talonsHelper.remove(model);
             }
         }
-
-        return true;
+        return SqlHelper.retBool(getBaseMapper().delete(queryWrapper));
     }
 
 
