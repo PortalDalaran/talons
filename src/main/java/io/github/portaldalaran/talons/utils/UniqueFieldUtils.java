@@ -8,8 +8,10 @@ import com.baomidou.mybatisplus.core.metadata.TableInfoHelper;
 import com.baomidou.mybatisplus.core.toolkit.ObjectUtils;
 import com.baomidou.mybatisplus.core.toolkit.ReflectionKit;
 import com.baomidou.mybatisplus.core.toolkit.StringUtils;
+import com.google.common.base.Joiner;
 import io.github.portaldalaran.talons.annotation.UniqueField;
 import io.github.portaldalaran.talons.exception.TalonsException;
+import io.github.portaldalaran.talons.exception.TalonsUniqueException;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -17,7 +19,6 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.io.Serializable;
 import java.lang.reflect.Field;
-import java.text.MessageFormat;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -27,9 +28,11 @@ import java.util.stream.Collectors;
 @Slf4j
 public class UniqueFieldUtils {
     private static final String FIELD_MUST_UNIQUE_VALUE_NULL = "Error in obtaining unique field value";
-    private static final String FIELD_MUST_UNIQUE = "[{0}] It has been used and must be unique";
-    private static final String FIELD_VALUE_MUST_UNIQUE = "{0},value[{1}] It has been used and must be unique";
     private static Object idVal;
+
+    private UniqueFieldUtils() {
+        throw new IllegalStateException("Utility class");
+    }
 
     private static Object getEntityId(Object model) {
         return ReflectionUtils.getFieldValue(model, "id");
@@ -38,13 +41,11 @@ public class UniqueFieldUtils {
     /**
      * Service里边用的，在修改时扫描不等于自身ID的其它unique是否重复
      * When modifying, check whether other unique that is not equal to its own ID are repeated
-     * @param baseMapper
-     * @param model
-     * @return boolean
-     * @author wangxiaoli
-     * @date 2021/3/25 16:25
+     *
+     * @param baseMapper mybatis mapper
+     * @param model      entityDO
      */
-    public static <M extends BaseMapper<T>, T> boolean checkUniqueField(M baseMapper, T model) {
+    public static <M extends BaseMapper<T>, T> void checkUniqueField(M baseMapper, T model) {
         List<UniqueFieldInfo> list = getUniqueField(model);
         if (!list.isEmpty()) {
             QueryWrapper<T> queryWrapper = new QueryWrapper<>();
@@ -61,65 +62,61 @@ public class UniqueFieldUtils {
             }
             List<T> resultList = baseMapper.selectList(queryWrapper);
             if (ObjectUtils.isNotEmpty(resultList)) {
-                procUniqueMessage(map, resultList);
+                for (Map.Entry<String, List<UniqueFieldInfo>> mapEntry : map.entrySet()) {
+                    //当group为空时
+                    if (StringUtils.isBlank(mapEntry.getKey())) {
+                        procSingleUnique(mapEntry.getValue(), resultList);
+                    } else {
+                        procGroupUnique(mapEntry.getValue(), resultList);
+                    }
+                }
             }
         }
-        return true;
     }
 
     /**
      * 若查询结果不为空，返回错误信息
      *
-     * @param map
-     * @param resultList
-     * @author wangxiaoli
-     * @date 2021/4/30 00:17
+     * @param uniqueFieldInfoList uniqueFieldInfo list
+     * @param resultList          duplicateList
      */
-    private static <T> void procUniqueMessage(Map<String, List<UniqueFieldInfo>> map, List<T> resultList) {
-        List<String> keys = new ArrayList<>(map.keySet());
-        for (String key : keys) {
-            List<UniqueFieldInfo> values = map.get(key);
-            //当group为空时
-            if (StringUtils.isBlank(key)) {
-                //定位是哪个字段值出问题了
-                for (T obj : resultList) {
-                    for (UniqueFieldInfo uniqueFieldInfo : values) {
-                        Object value = ReflectionKit.getFieldValue(obj, uniqueFieldInfo.getFieldName());
-                        if (Objects.equals(value, uniqueFieldInfo.value)) {
-                            MessageFormat.format(FIELD_VALUE_MUST_UNIQUE, uniqueFieldInfo.fieldName, value);
-                        }
-                    }
-                }
-            } else {
-                //如果不为空，返回组合值
-                //定位是哪个字段值出问题了
-                for (T obj : resultList) {
-                    boolean isCheck = true;
-                    List<String> tempList = new ArrayList<>();
-                    for (UniqueFieldInfo uniqueFieldInfo : values) {
-                        Object value = ReflectionKit.getFieldValue(obj, uniqueFieldInfo.getFieldName());
-                        if (uniqueFieldInfo.value instanceof String) {
-                            if (!value.toString().equalsIgnoreCase(uniqueFieldInfo.value.toString())) {
-                                isCheck = false;
-                                break;
-                            }
-                        } else {
-                            if (!Objects.equals(value, uniqueFieldInfo.value)) {
-                                isCheck = false;
-                                break;
-                            }
-                        }
-
-                        tempList.add(uniqueFieldInfo.value.toString());
-                    }
-                    if (isCheck) {
-                        String errMsg = MessageFormat.format(FIELD_MUST_UNIQUE, tempList.toString());
-                        throw new TalonsException(errMsg);
-                    }
+    private static <T> void procSingleUnique(List<UniqueFieldInfo> uniqueFieldInfoList, List<T> resultList) {
+        //定位是哪个字段值出问题了
+        for (T entity : resultList) {
+            for (UniqueFieldInfo uniqueField : uniqueFieldInfoList) {
+                Object value = ReflectionKit.getFieldValue(entity, uniqueField.getFieldName());
+                if (Objects.equals(value, uniqueField.value)) {
+                    throw new TalonsUniqueException(uniqueField.getMessage(), value.toString());
                 }
             }
         }
+    }
 
+    /**
+     * 若查询结果不为空，返回错误信息
+     *
+     * @param uniqueFieldInfoList group uniqueFieldList
+     * @param resultList          duplicate list
+     */
+    private static <T> void procGroupUnique(List<UniqueFieldInfo> uniqueFieldInfoList, List<T> resultList) {
+        //定位是哪个字段值出问题了
+        for (T entity : resultList) {
+            boolean isCheck = true;
+            List<String> tempList = new ArrayList<>();
+            String message = "";
+            for (UniqueFieldInfo uniqueFieldInfo : uniqueFieldInfoList) {
+                Object value = ReflectionKit.getFieldValue(entity, uniqueFieldInfo.getFieldName());
+                message = uniqueFieldInfo.getMessage();
+                if (!Objects.equals(value, uniqueFieldInfo.value)) {
+                    isCheck = false;
+                    break;
+                }
+                tempList.add(uniqueFieldInfo.value.toString());
+            }
+            if (isCheck) {
+                throw new TalonsUniqueException(message, Joiner.on(",").join(tempList));
+            }
+        }
     }
 
 
@@ -140,9 +137,21 @@ public class UniqueFieldUtils {
                     field.setAccessible(true);
                     String fieldName = ObjectUtils.isEmpty(unique.value()) ? field.getName() : unique.value();
                     String group = Optional.ofNullable(unique.group()).orElse("");
+                    String message = Optional.ofNullable(unique.message()).orElse("");
+
                     //如果该值为空，则跳过
                     if (ObjectUtils.isNotEmpty(field.get(entity))) {
-                        list.add(new UniqueFieldInfo(group, tableFieldInfo.getColumn(), fieldName, field.get(entity), field));
+                        UniqueFieldInfo uniqueInfo = new UniqueFieldInfo();
+                        uniqueInfo.setGroup(group);
+                        uniqueInfo.setMessage(message);
+
+                        uniqueInfo.setFieldName(fieldName);
+                        uniqueInfo.setColumn(tableFieldInfo.getColumn());
+
+                        uniqueInfo.setValue(field.get(entity));
+                        uniqueInfo.setField(field);
+
+                        list.add(uniqueInfo);
                     }
                 } catch (IllegalAccessException e) {
                     throw new TalonsException(FIELD_MUST_UNIQUE_VALUE_NULL);
@@ -194,5 +203,6 @@ public class UniqueFieldUtils {
         private String fieldName;
         private Object value;
         private Field field;
+        private String message;
     }
 }

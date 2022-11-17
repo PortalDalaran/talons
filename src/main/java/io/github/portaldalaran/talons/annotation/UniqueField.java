@@ -14,6 +14,11 @@ public @interface UniqueField {
     String value() default "";
 
     /**
+     * 提示信息
+     * Not unique prompt information
+     */
+    String message() default "";
+    /**
      * 联合多个字段唯一；
      * 若一个model内，有多组联合字段唯一，则group可每字命名一个字段
      * 当group为空时，拼接查询SQL为 UniqueFieldA = xxx OR UniqueFieldB = XXX
@@ -28,4 +33,5 @@ public @interface UniqueField {
      * When there are multiple groups, the splicing query SQL is (UniqueFieldA=xxx AND UniqueFieldB=XXX) OR (UniqueFieldC=xxx AND UniqueFieldD=XXX)
      */
     String group() default "";
+
 }
