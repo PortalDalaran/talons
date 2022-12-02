@@ -47,7 +47,11 @@ public class TalonsAssociationService {
     private ObjectFactory<SqlSession> factory;
 
     private Object getEntityId(Object model) {
-        return ReflectionUtils.getFieldValue(model, "id");
+        try {
+            return ReflectionUtils.getFieldValue(model, "id");
+        } catch (Exception e) {
+            return null;
+        }
     }
 
     public void setFactory(ObjectFactory<SqlSession> factory) {
@@ -200,9 +204,9 @@ public class TalonsAssociationService {
     /**
      * 删除多对多关联表
      *
-     * @param model         主表实体
+     * @param model            主表实体
      * @param associationTable 表关系对象
-     * @param <M>           主表实体类型
+     * @param <M>              主表实体类型
      */
     @Transactional(rollbackFor = {Exception.class})
     public <M> void removeMany2ManyTable(M model, AssociationTableInfo<M> associationTable) {
@@ -227,9 +231,9 @@ public class TalonsAssociationService {
     /**
      * 删除一对多表关系
      *
-     * @param model         主表实体
+     * @param model            主表实体
      * @param associationTable 表关系对象
-     * @param <M>           主表实体类型
+     * @param <M>              主表实体类型
      * @throws TalonsException
      */
     @Transactional(rollbackFor = {Exception.class})
@@ -264,7 +268,7 @@ public class TalonsAssociationService {
      * 删除一对多字段关联关联
      *
      * @param model          主表实体
-     * @param assTableInfo    表关系对象
+     * @param assTableInfo   表关系对象
      * @param rsFieldInfo    主表关联字段
      * @param targetList     关联表对象列表
      * @param isDeleteTarget 是否删除关联表
@@ -280,8 +284,9 @@ public class TalonsAssociationService {
         List<JoinColumn> joinColumns = rsFieldInfo.getJoinColumns();
         TableInfo targetTableInfo = TableInfoHelper.getTableInfo(rsFieldInfo.getTargetEntity());
         if (ObjectUtils.isEmpty(joinColumns)) {
+
             //如果为空，则默认为关联对象的主键
-            String referencedColumnName = TalonsUtils.guessReferencedColumnName(assTableInfo.getName());
+            String referencedColumnName = StringUtils.isNotBlank(rsFieldInfo.getMappedBy()) ? rsFieldInfo.getMappedBy() : TalonsUtils.guessReferencedColumnName(assTableInfo.getName());
             Object idValue = getEntityId(model);
             if (ObjectUtils.isNotEmpty(idValue)) {
                 referencedColumnName = TalonsUtils.getDataBaseColumnName(referencedColumnName, targetTableInfo);
@@ -310,7 +315,7 @@ public class TalonsAssociationService {
             }
         }
         if (ObjectUtils.isNotEmpty(targetList)) {
-            List<Object> needIds = targetList.stream().map(this::getEntityId).collect(Collectors.toList());
+            List<Object> needIds = targetList.stream().filter(obj -> Objects.nonNull(this.getEntityId(obj))).map(this::getEntityId).collect(Collectors.toList());
             //删除的ID中不包括 现在列表中已经存在的ID
             if (!needIds.isEmpty()) {
                 targetWrapper.and(i -> i.notIn(targetTableInfo.getKeyProperty(), needIds));
@@ -386,7 +391,7 @@ public class TalonsAssociationService {
      * J entity of joinTable
      *
      * @param model          主表
-     * @param assField  主表关联字段
+     * @param assField       主表关联字段
      * @param targetList     关联对象列表
      * @param isDeleteTarget 是否删除
      * @param <M>            主表类型
@@ -434,7 +439,7 @@ public class TalonsAssociationService {
     /**
      * 处理中间表与与关联表关系
      *
-     * @param assField      主表字段
+     * @param assField           主表字段
      * @param joinTableWrapper   中间表查询Wrapper
      * @param joinTableMapper    中间表Mapper
      * @param targetQueryWrapper 关联表查询Wrapper
@@ -480,7 +485,7 @@ public class TalonsAssociationService {
      * 同时组装主表与中间表 Wrapper 查询where条件
      *
      * @param model            主表实体
-     * @param assField    主表关联字段
+     * @param assField         主表关联字段
      * @param joinTableWrapper 中间表查询Wrapper
      * @param <M>              主表类型
      * @param <J>              中间表类型
