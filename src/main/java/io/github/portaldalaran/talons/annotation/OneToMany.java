@@ -16,7 +16,7 @@ public @interface OneToMany {
     /**
      * 当为一对多为列表时可以设置 关联对象的实体类，
      * 若不填，则默认为列表中的范型类型
-     *
+     * <p>
      * When it is a one to many list, you can set the entity class of the associated object,
      * If it is not filled, it defaults to the generic type in the list
      */
@@ -26,14 +26,21 @@ public @interface OneToMany {
      * 使用哪个mapper来查询，
      * 默认为I+关联实体名+Mapper
      * 如 User = IUserMapper
-     *
+     * <p>
      * Which mapper is used to query, The default is I+associated entity name+Mapper
      */
     Class<?> targetMapper() default void.class;
 
     /**
+     * 使用哪个mapper来查询，如果有targetMapper，则忽略targetMapperName
+     * <p>
+     * Which mapper is used to query. If there is a targetMapper, the targetMapperName is ignored
+     */
+    String targetMapperName() default "";
+
+    /**
      * 级联操作类型
-     *      * (Optional) The operations that must be cascaded to
+     * * (Optional) The operations that must be cascaded to
      * the target of the association.
      * <p> Defaults to no operations being cascaded.
      *

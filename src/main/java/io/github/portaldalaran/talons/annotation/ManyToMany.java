@@ -21,17 +21,24 @@ public @interface ManyToMany {
     /**
      * 多对多关联对象的实体类，
      * 若不填，则默认为field声名的类型
-     *
+     * <p>
      * Entity class of one to many associated objects,
      * If it is not filled in, it defaults to the type of field name
      */
     Class<?> targetEntity() default void.class;
 
     /**
+     * 使用哪个mapper来查询，如果有targetMapper，则忽略targetMapperName
+     * <p>
+     * Which mapper is used to query. If there is a targetMapper, the targetMapperName is ignored
+     */
+    String targetMapperName() default "";
+
+    /**
      * 使用哪个mapper来查询，
      * 默认为I+关联实体名+Mapper
      * 如 User = IUserMapper
-     *
+     * <p>
      * Which mapper is used to query, The default is I+associated entity name+Mapper
      */
     Class<?> targetMapper() default void.class;
@@ -53,5 +60,6 @@ public @interface ManyToMany {
      * is a hint to the persistence provider runtime.
      */
     FetchType fetch() default FetchType.LAZY;
+
 
 }

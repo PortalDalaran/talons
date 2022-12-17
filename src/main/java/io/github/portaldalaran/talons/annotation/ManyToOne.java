@@ -32,6 +32,13 @@ public @interface ManyToOne {
     Class<?> targetMapper() default void.class;
 
     /**
+     * 使用哪个mapper来查询，如果有targetMapper，则忽略targetMapperName
+     *
+     * Which mapper is used to query. If there is a targetMapper, the targetMapperName is ignored
+     */
+    String targetMapperName() default "";
+
+    /**
      * (Optional) The operations that must be cascaded to
      * the target of the association.
      *
@@ -48,9 +55,4 @@ public @interface ManyToOne {
      */
     FetchType fetch() default FetchType.EAGER;
 
-    /**
-     * (Optional) Whether the association is optional. If set
-     * to false then a non-null relationship must always exist.
-     */
-//    boolean optional() default true;
 }

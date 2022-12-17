@@ -2,7 +2,6 @@ package io.github.portaldalaran.talons.meta;
 
 
 import com.baomidou.mybatisplus.core.toolkit.ObjectUtils;
-import com.google.common.base.Joiner;
 import com.google.common.collect.Lists;
 import io.github.portaldalaran.talons.annotation.*;
 import io.github.portaldalaran.talons.exception.TalonsException;
@@ -25,8 +24,7 @@ import java.util.*;
 @AllArgsConstructor
 @NoArgsConstructor
 public class AssociationFieldInfo {
-    private static final String MAPPER_SUFFIX = "Mapper";
-    private static final String MAPPER_PREFIX = "I";
+
     private Field field;
     private String name;
 
@@ -89,9 +87,7 @@ public class AssociationFieldInfo {
 
         //若一对多关联的mapper未设置，则按这个设置
         if (void.class.isAssignableFrom(oneToMany.targetMapper())) {
-            String mapperClassName = Joiner.on("").join(MAPPER_PREFIX, TalonsUtils.guessMapperClassName(this.targetEntity.getSimpleName()), MAPPER_SUFFIX);
-            this.targetMapper =
-                    mappers.stream().filter(cls -> cls.getSimpleName().equalsIgnoreCase(mapperClassName)).findFirst().orElse(null);
+            this.targetMapper = TalonsUtils.guessMapper(mappers, oneToMany.targetMapperName(), this.targetEntity.getSimpleName());
             if (ObjectUtils.isEmpty(targetMapper)) {
                 throw new TalonsException("Mybatis plus extended Talons failed to find the  entity");
             }
@@ -151,8 +147,7 @@ public class AssociationFieldInfo {
 
         //若多对一关联的mapper未设置，则按这个设置
         if (void.class.isAssignableFrom(manyToOne.targetMapper())) {
-            String mapperClassName = Joiner.on("").join(MAPPER_PREFIX, TalonsUtils.guessMapperClassName(this.targetEntity.getSimpleName()), MAPPER_SUFFIX);
-            this.targetMapper = mappers.stream().filter(cls -> cls.getSimpleName().equalsIgnoreCase(mapperClassName)).findFirst().orElse(null);
+            this.targetMapper = TalonsUtils.guessMapper(mappers, manyToOne.targetMapperName(), this.targetEntity.getSimpleName());
             if (ObjectUtils.isEmpty(targetMapper)) {
                 throw new TalonsException("Mybatis plus extended Talons failed to find the entity");
             }
@@ -199,8 +194,7 @@ public class AssociationFieldInfo {
 
         //若一对多关联的mapper未设置，则按这个设置
         if (void.class.isAssignableFrom(manyToMany.targetMapper())) {
-            String mapperClassName = Joiner.on("").join(MAPPER_PREFIX, TalonsUtils.guessMapperClassName(this.targetEntity.getSimpleName()), MAPPER_SUFFIX);
-            this.targetMapper = mappers.stream().filter(cls -> cls.getSimpleName().equalsIgnoreCase(mapperClassName)).findFirst().orElse(null);
+            this.targetMapper = TalonsUtils.guessMapper(mappers, manyToMany.targetMapperName(), this.targetEntity.getSimpleName());
             if (ObjectUtils.isEmpty(targetMapper)) {
                 throw new TalonsException("Mybatis plus extended Talons failed to find the entity");
             }
@@ -229,11 +223,7 @@ public class AssociationFieldInfo {
 
         //若JoinTable注解上配置的mapper为空
         if (void.class.isAssignableFrom(joinTable.mapper())) {
-            String mapperClassName = Joiner.on("").join(MAPPER_PREFIX, TalonsUtils.guessMapperClassName(this.joinTableName), MAPPER_SUFFIX);
-            this.joinMapper = mappers.stream().filter(cls -> cls.getSimpleName().equalsIgnoreCase(mapperClassName)).findFirst().orElse(null);
-            if (ObjectUtils.isEmpty(joinMapper)) {
-                throw new TalonsException("Mybatis plus extended Talons failed to find the entity");
-            }
+            this.joinMapper = TalonsUtils.guessMapper(mappers, joinTable.mapperName(), this.joinTableName);
         } else {
             this.joinMapper = joinTable.mapper();
         }
@@ -250,4 +240,6 @@ public class AssociationFieldInfo {
             this.inverseJoinColumns.addAll(Arrays.asList(joinTable.inverseJoinColumns()));
         }
     }
+
+
 }
