@@ -11,6 +11,9 @@ import java.util.List;
 import java.util.Objects;
 
 public interface ITalonsService<T> extends IService<T> {
+    default boolean isRelational() {
+        return true;
+    }
 
     /**
      * 保存和修改时，做验证
@@ -38,7 +41,10 @@ public interface ITalonsService<T> extends IService<T> {
         });
     }
 
-
+    @Override
+    default boolean save(T entity) {
+        return save(entity, isRelational());
+    }
 
     /**
      * 保存对象的同时保存关联对象
@@ -64,6 +70,7 @@ public interface ITalonsService<T> extends IService<T> {
      * @return
      */
     public boolean saveOrUpdate(T entity, Wrapper<T> updateWrapper, boolean isRelational);
+
     /**
      * 保存对象的同时保存关联对象
      *
@@ -96,6 +103,7 @@ public interface ITalonsService<T> extends IService<T> {
      * @return
      */
     public boolean updateById(T entity, boolean isRelational);
+
     /**
      * 保存对象的同时保存关联对象
      *
@@ -106,6 +114,7 @@ public interface ITalonsService<T> extends IService<T> {
 
     /**
      * 删除对象同时删除关联对象
+     *
      * @param id
      * @return
      */
@@ -114,12 +123,15 @@ public interface ITalonsService<T> extends IService<T> {
 
     /**
      * 删除对象
+     *
      * @param queryWrapper
      * @return
      */
     public boolean remove(QueryWrapper<T> queryWrapper);
+
     /**
      * 删除对象
+     *
      * @param ids
      * @return
      */
@@ -127,6 +139,7 @@ public interface ITalonsService<T> extends IService<T> {
 
     /**
      * 删除对象同时删除关联对象
+     *
      * @param queryWrapper
      * @return
      */
@@ -134,6 +147,7 @@ public interface ITalonsService<T> extends IService<T> {
 
     /**
      * 查询的同时查询关联对象
+     *
      * @param id
      * @return
      */
