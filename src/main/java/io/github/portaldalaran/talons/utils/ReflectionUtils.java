@@ -276,8 +276,8 @@ public class ReflectionUtils {
      * determined
      */
     @SuppressWarnings("unchecked")
-    public static <T> Class<T> getClassGenricType(final Class clazz) {
-        return getClassGenricType(clazz, 0);
+    public static <T> Class<T> getClassGenericType(final Class clazz) {
+        return getClassGenericType(clazz, 0);
     }
 
     /**
@@ -290,7 +290,7 @@ public class ReflectionUtils {
      * @return the index generic declaration, or Object.class if cannot be
      * determined
      */
-    public static Class getClassGenricType(final Class clazz, final int index) {
+    public static Class getClassGenericType(final Class clazz, final int index) {
 
         Type genType = clazz.getGenericSuperclass();
 

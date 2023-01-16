@@ -283,16 +283,21 @@ public class TalonsAssociationService {
         UpdateWrapper<T> updateWrapper = new UpdateWrapper<>();
         List<JoinColumn> joinColumns = rsFieldInfo.getJoinColumns();
         TableInfo targetTableInfo = TableInfoHelper.getTableInfo(rsFieldInfo.getTargetEntity());
-        if (ObjectUtils.isEmpty(joinColumns)) {
+        String mappedBy = StringUtils.isNotBlank(rsFieldInfo.getMappedBy()) ? rsFieldInfo.getMappedBy() : TalonsUtils.guessReferencedColumnName(assTableInfo.getName());
+        Object idValue = getEntityId(model);
+        if (StringUtils.isNotBlank(mappedBy) && Objects.nonNull(idValue)) {
+            mappedBy = TalonsUtils.getDataBaseColumnName(mappedBy, targetTableInfo);
+            //删除操作必须只针对当前one端的id
+            targetWrapper.eq(mappedBy, idValue);
+            updateWrapper.eq(mappedBy, idValue);
+        }
 
+        if (ObjectUtils.isEmpty(joinColumns)) {
             //如果为空，则默认为关联对象的主键
             String referencedColumnName = StringUtils.isNotBlank(rsFieldInfo.getMappedBy()) ? rsFieldInfo.getMappedBy() : TalonsUtils.guessReferencedColumnName(assTableInfo.getName());
-            Object idValue = getEntityId(model);
             if (ObjectUtils.isNotEmpty(idValue)) {
                 referencedColumnName = TalonsUtils.getDataBaseColumnName(referencedColumnName, targetTableInfo);
-                targetWrapper.eq(referencedColumnName, idValue);
                 updateWrapper.set(referencedColumnName, null);
-                updateWrapper.eq(referencedColumnName, idValue);
             }
         } else {
             for (JoinColumn joinColumn : joinColumns) {
@@ -303,14 +308,19 @@ public class TalonsAssociationService {
                 String referencedColumnName = StringUtils.isNotBlank(joinColumn.referencedColumnName()) ?
                         joinColumn.referencedColumnName() : targetTableInfo.getKeyProperty();
 
-                Object columnValue = StringUtils.isNotBlank(joinColumn.referencedColumnValue()) ?
-                        joinColumn.referencedColumnValue() : ReflectionUtils.getFieldValue(model, columnName);
-
-                if (ObjectUtils.isNotEmpty(columnValue)) {
-                    referencedColumnName = TalonsUtils.getDataBaseColumnName(referencedColumnName, targetTableInfo);
-                    targetWrapper.or().eq(referencedColumnName, columnValue);
-                    updateWrapper.set(referencedColumnName, null);
-                    updateWrapper.or().eq(referencedColumnName, columnValue);
+                referencedColumnName = TalonsUtils.getDataBaseColumnName(referencedColumnName, targetTableInfo);
+                //如果绑定值不为空，则删除操作必须加上绑定值
+                if (StringUtils.isNotBlank(joinColumn.referencedColumnValue())) {
+                    //删除操作必须只针对当前one端的id
+                    targetWrapper.eq(referencedColumnName, joinColumn.referencedColumnValue());
+                    updateWrapper.eq(referencedColumnName, joinColumn.referencedColumnValue());
+                } else {
+                    Object columnValue = ReflectionUtils.getFieldValue(model, columnName);
+                    if (ObjectUtils.isNotEmpty(columnValue)) {
+                        targetWrapper.or().eq(referencedColumnName, columnValue);
+                        updateWrapper.set(referencedColumnName, null);
+                        updateWrapper.or().eq(referencedColumnName, columnValue);
+                    }
                 }
             }
         }
