@@ -239,10 +239,10 @@ public class TalonsAssociationService {
     @Transactional(rollbackFor = {Exception.class})
     public <M> void removeOne2ManyTable(M model, AssociationTableInfo<M> associationTable) throws TalonsException {
         List<AssociationFieldInfo> o2ms = associationTable.getOneToManys();
-        for (AssociationFieldInfo AssociationFieldInfo : o2ms) {
+        for (AssociationFieldInfo associationFieldInfo : o2ms) {
             //ALL,PERSIST,MERGE,REMOVE
-            List<CascadeType> cascadeTypes = AssociationFieldInfo.getCascadeTypes();
-            String mappedBy = AssociationFieldInfo.getMappedBy();
+            List<CascadeType> cascadeTypes = associationFieldInfo.getCascadeTypes();
+            String mappedBy = associationFieldInfo.getMappedBy();
             //如果主控端在当前model，并且有对应权限，则删除关联表
             String tableInfoColumnId = TalonsUtils.guessReferencedColumnName(associationTable.getName());
             if (StringUtils.equalsIgnoreCase(mappedBy, tableInfoColumnId) || ObjectUtils.isEmpty(mappedBy)) {
@@ -254,11 +254,11 @@ public class TalonsAssociationService {
                     log.debug("CascadeType 不包括ALL、REMOVE，不能删除关联表");
                     continue;
                 }
-                if (ObjectUtils.isNotEmpty(AssociationFieldInfo.getJoinTable())) {
+                if (ObjectUtils.isNotEmpty(associationFieldInfo.getJoinTable())) {
                     //ALL,MERGE,REMOVE下可以删除中间表
-                    deleteJoinTable(model, AssociationFieldInfo, null, isDeleteTarget);
+                    deleteJoinTable(model, associationFieldInfo, null, isDeleteTarget);
                 } else {
-                    removeOne2ManyField(model, associationTable, AssociationFieldInfo, null, isDeleteTarget);
+                    removeOne2ManyField(model, associationTable, associationFieldInfo, null, isDeleteTarget);
                 }
             }
         }
@@ -283,7 +283,11 @@ public class TalonsAssociationService {
         UpdateWrapper<T> updateWrapper = new UpdateWrapper<>();
         List<JoinColumn> joinColumns = rsFieldInfo.getJoinColumns();
         TableInfo targetTableInfo = TableInfoHelper.getTableInfo(rsFieldInfo.getTargetEntity());
-        String mappedBy = StringUtils.isNotBlank(rsFieldInfo.getMappedBy()) ? rsFieldInfo.getMappedBy() : TalonsUtils.guessReferencedColumnName(assTableInfo.getName());
+        String mappedBy = rsFieldInfo.getMappedBy();
+        //当没有设置mappedBy且没有设置joinColumn时，则猜测关联主键，否则则joincolumn控制
+        if (StringUtils.isBlank(mappedBy) && ObjectUtils.isEmpty(joinColumns)) {
+            mappedBy = TalonsUtils.guessReferencedColumnName(assTableInfo.getName());
+        }
         Object idValue = getEntityId(model);
         if (StringUtils.isNotBlank(mappedBy) && Objects.nonNull(idValue)) {
             mappedBy = TalonsUtils.getDataBaseColumnName(mappedBy, targetTableInfo);
