@@ -31,14 +31,16 @@ public class TalonsUtils {
     public static String guessReferencedColumnName(String name) {
         return guessEntityClassName(XStringUtils.toLowerFirstCase(name)) + ID_SUFFIX;
     }
+
     /**
      * 去掉Entity类，后边特定的结尾字符
+     *
      * @param entityClassName classNameString
      * @return string
      */
     private static String guessEntityClassName(String entityClassName) {
         //以特定字符结尾的持久化对象
-        List<String> lastCharList = Lists.newArrayList("DO","PO");
+        List<String> lastCharList = Lists.newArrayList("DO", "PO");
         for (String lastChar : lastCharList) {
             if (entityClassName.endsWith(lastChar)) {
                 entityClassName = entityClassName.substring(0, entityClassName.lastIndexOf(lastChar));
@@ -47,6 +49,7 @@ public class TalonsUtils {
         }
         return entityClassName;
     }
+
     /**
      * 去掉Entity类，后边特定的结尾字符
      *
@@ -60,7 +63,7 @@ public class TalonsUtils {
         for (String mapperName : mapperNames) {
             if (StringUtils.isNotBlank(mapperName)) {
                 if (!mapperName.endsWith(MAPPER_SUFFIX)) {
-                    mapperName =  guessEntityClassName(mapperName) + MAPPER_SUFFIX;
+                    mapperName = guessEntityClassName(mapperName) + MAPPER_SUFFIX;
                 }
 
                 tempNames.add(mapperName);
@@ -101,5 +104,27 @@ public class TalonsUtils {
             javaFieldName = tableFieldInfo.getColumn();
         }
         return javaFieldName;
+    }
+
+    /**
+     * 检查该字段是否在数据库中存在
+     *
+     * @param javaFieldName
+     * @param tableInfo
+     * @return
+     */
+    public static boolean checkColumnName(String javaFieldName, TableInfo tableInfo) {
+        String finalJavaFieldName = javaFieldName;
+        //如果是key返回
+        String keyProperty = tableInfo.getKeyProperty();
+        if (Objects.equals(keyProperty, finalJavaFieldName)) {
+            return true;
+        }
+
+        TableFieldInfo tableFieldInfo = tableInfo.getFieldList().stream().filter(info -> info.getField().getName().equalsIgnoreCase(finalJavaFieldName)).findFirst().orElse(null);
+        if (Objects.nonNull(tableFieldInfo)) {
+            return true;
+        }
+        return false;
     }
 }

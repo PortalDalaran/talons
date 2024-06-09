@@ -190,8 +190,10 @@ public class TalonsAssociationQuery {
 
                 if (ObjectUtils.isNotEmpty(idValue)) {
                     joinTableSize = 1;
-                    //在mybatis的targetTableInfo中拓对应的数据库字段，并把ID设为查询条件
-                    targetWrapper.eq(TalonsUtils.getDataBaseColumnName(referencedColumnName, targetTableInfo), idValue);
+                    //在mybatis的targetTableInfo中拓对应的数据库字段，并把ID设为查询条件，如果没有这个字段则忽略
+                    if (TalonsUtils.checkColumnName(referencedColumnName, targetTableInfo)) {
+                        targetWrapper.eq(TalonsUtils.getDataBaseColumnName(referencedColumnName, targetTableInfo), idValue);
+                    }
                 }
             } else {
                 //装载查询条件
