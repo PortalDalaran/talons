@@ -174,6 +174,9 @@ public class TalonsHelper {
      */
     @Transactional(readOnly = true)
     public <M> M query(M model) throws TalonsException {
+        if (Objects.isNull(model)) {
+            return null;
+        }
         AssociationTableInfo<M> assTableInfo = (AssociationTableInfo<M>) init(model.getClass());
         talonsAssociationQuery.query(model, assTableInfo, Lists.newArrayList());
         return model;
