@@ -12,7 +12,6 @@ import com.baomidou.mybatisplus.core.toolkit.StringUtils;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.baomidou.mybatisplus.extension.toolkit.SqlHelper;
 import org.apache.ibatis.binding.MapperMethod;
-import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
 import java.io.Serializable;
@@ -25,7 +24,6 @@ public class TalonsServiceImpl<M extends BaseMapper<T>, T> extends ServiceImpl<M
     @Resource
     protected TalonsHelper talonsHelper;
 
-    @Transactional(rollbackFor = {Exception.class})
     @Override
     public boolean save(T entity, boolean relational) {
         checkField(entity);
@@ -46,7 +44,6 @@ public class TalonsServiceImpl<M extends BaseMapper<T>, T> extends ServiceImpl<M
         return saveOrUpdate(entity, updateWrapper, isRelational());
     }
 
-    @Transactional(rollbackFor = {Exception.class})
     @Override
     public boolean saveOrUpdate(T entity, Wrapper<T> updateWrapper, boolean isRelational) {
         checkField(entity);
@@ -58,13 +55,11 @@ public class TalonsServiceImpl<M extends BaseMapper<T>, T> extends ServiceImpl<M
     }
 
     @Override
-    @Transactional(rollbackFor = {Exception.class})
     public boolean saveOrUpdate(T entity) {
         return saveOrUpdate(entity, isRelational());
     }
 
     @Override
-    @Transactional(rollbackFor = {Exception.class})
     public boolean saveOrUpdate(T entity, boolean isRelational) {
         checkField(entity);
 
@@ -80,7 +75,6 @@ public class TalonsServiceImpl<M extends BaseMapper<T>, T> extends ServiceImpl<M
     }
 
     @Override
-    @Transactional(rollbackFor = {Exception.class})
     public boolean saveOrUpdateBatch(Collection<T> entityList, int batchSize, boolean isRelational) {
         TableInfo tableInfo = TableInfoHelper.getTableInfo(this.entityClass);
         String keyProperty = tableInfo.getKeyProperty();
@@ -113,13 +107,11 @@ public class TalonsServiceImpl<M extends BaseMapper<T>, T> extends ServiceImpl<M
         return saveOrUpdateBatch(entityList, 1000, isRelational);
     }
 
-    @Transactional(rollbackFor = {Exception.class})
     @Override
     public boolean updateById(T entity) {
         return updateById(entity, isRelational());
     }
 
-    @Transactional(rollbackFor = {Exception.class})
     @Override
     public boolean updateById(T entity, boolean isRelational) {
         checkField(entity);
@@ -131,20 +123,17 @@ public class TalonsServiceImpl<M extends BaseMapper<T>, T> extends ServiceImpl<M
     }
 
 
-    @Transactional(rollbackFor = {Exception.class})
     @Override
     public boolean updateBatchById(Collection<T> entityList, boolean isRelational) {
         checkField(entityList);
-        return saveOrUpdateBatch(entityList,isRelational);
+        return saveOrUpdateBatch(entityList, isRelational);
     }
 
-    @Transactional(rollbackFor = {Exception.class})
     @Override
     public boolean updateBatchById(Collection<T> entityList) {
         return updateBatchById(entityList, isRelational());
     }
 
-    @Transactional(rollbackFor = {Exception.class})
     @Override
     public boolean removeById(Serializable id, boolean isRelational) {
         if (isRelational) {
@@ -172,12 +161,10 @@ public class TalonsServiceImpl<M extends BaseMapper<T>, T> extends ServiceImpl<M
     }
 
     @Override
-    @Transactional(rollbackFor = {Exception.class})
     public boolean remove(QueryWrapper<T> queryWrapper) {
         return remove(queryWrapper, isRelational());
     }
 
-    @Transactional(rollbackFor = {Exception.class})
     @Override
     public boolean remove(QueryWrapper<T> queryWrapper, boolean isRelational) {
 
