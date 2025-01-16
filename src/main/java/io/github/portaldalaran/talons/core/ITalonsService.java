@@ -118,6 +118,7 @@ public interface ITalonsService<T> extends IService<T> {
      * @param id
      * @return
      */
+    @Override
     public boolean removeById(Serializable id, boolean isRelational);
 
 
