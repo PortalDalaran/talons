@@ -6,7 +6,7 @@
 
     <groupId>io.github.portaldalaran</groupId>
     <artifactId>talons</artifactId>
-    <version>3.0.0</version>
+    <version>3.0.1</version>
     <packaging>jar</packaging>
 
     <name>${project.artifactId}</name>
@@ -21,11 +21,11 @@
         <maven.compiler.target>17</maven.compiler.target>
         <!-- 打包时跳过测试 -->
         <skipTests>true</skipTests>
-        <lombok.version>1.18.36</lombok.version>
+        <lombok.version>1.18.42</lombok.version>
         <spring.core.version>6.2.1</spring.core.version>
-        <mybatis-plus.version>3.5.9</mybatis-plus.version>
-        <commons.lang3.version>3.17.0</commons.lang3.version>
-        <guava.version>32.0.1-jre</guava.version>
+        <mybatis-plus.version>3.5.14</mybatis-plus.version>
+        <commons.lang3.version>3.18.0</commons.lang3.version>
+        <guava.version>33.5.0-jre</guava.version>
 
         <!-- 服务id 也就是setting.xml中的servers.server.id -->
         <serverId>ossrh</serverId>
@@ -165,7 +165,7 @@
                 <extensions>true</extensions>
                 <configuration>
                     <serverId>${serverId}</serverId>
-                    <nexusUrl>https://s01.oss.sonatype.org/</nexusUrl>
+                    <nexusUrl>https://ossrh-staging-api.central.sonatype.com/</nexusUrl>
                     <autoReleaseAfterClose>true</autoReleaseAfterClose>
                 </configuration>
             </plugin>
@@ -178,12 +178,8 @@
     </build>
     <distributionManagement>
         <snapshotRepository>
-            <id>${serverId}</id><!--与settings.xml的server.id保持一致-->
-            <url>https://s01.oss.sonatype.org/content/repositories/snapshots</url>
+            <id>central</id>
+            <url>https://central.sonatype.com/repository/maven-snapshots/</url>
         </snapshotRepository>
-        <repository>
-            <id>${serverId}</id><!--与settings.xml的server.id保持一致-->
-            <url>https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/</url>
-        </repository>
     </distributionManagement>
 </project>

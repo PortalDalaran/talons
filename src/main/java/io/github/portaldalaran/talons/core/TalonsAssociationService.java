@@ -72,7 +72,7 @@ public class TalonsAssociationService {
                 targetList = new ArrayList<>();
             }
             //如果有ID则设置ID到target的mappedBy
-            if (!Objects.isNull(modelId)) {
+            if (!Objects.isNull(modelId) && StringUtils.isNotBlank(mappedBy)) {
                 targetList.forEach(tModle -> {
                     ReflectionUtils.setFieldValue(tModle, mappedBy, modelId);
                 });
@@ -463,9 +463,11 @@ public class TalonsAssociationService {
     private <T, J> void bindingInverseJoinColumns(AssociationFieldInfo assField, QueryWrapper<J> joinTableWrapper, BaseMapper<J> joinTableMapper, QueryWrapper<T> targetQueryWrapper) {
         //数据库的column
         List<String> inverseColumnNames = Lists.newArrayList();
+        List<String> inverseColumnDataBaseNames = Lists.newArrayList();
         //关联对象的column
         List<String> inverseReferencedColumnNames = Lists.newArrayList();
         TableInfo targetTableInfo = TableInfoHelper.getTableInfo(assField.getTargetEntity());
+        TableInfo joinTableInfo = TableInfoHelper.getTableInfo(assField.getJoinEntity());
         for (JoinColumn joinColumn : assField.getInverseJoinColumns()) {
             //如果为空，则默认为关联对象名称+Id
             String columnName = StringUtils.isNotBlank(joinColumn.name()) ?
@@ -475,10 +477,11 @@ public class TalonsAssociationService {
                     joinColumn.referencedColumnName() : targetTableInfo.getKeyProperty();
 
             inverseColumnNames.add(columnName);
+            inverseColumnDataBaseNames.add(TalonsUtils.getDataBaseColumnName(columnName, joinTableInfo));
             inverseReferencedColumnNames.add(referencedColumnName);
         }
         //inverseJoinColumns 有多个的情况要处理多个查询值
-        joinTableWrapper.select(Joiner.on(",").join(inverseColumnNames));
+        joinTableWrapper.select(Joiner.on(",").join(inverseColumnDataBaseNames));
 
         List<Map<String, Object>> referencedColumnValues = joinTableMapper.selectMaps(joinTableWrapper);
 
@@ -503,7 +506,6 @@ public class TalonsAssociationService {
      * @param joinTableWrapper 中间表查询Wrapper
      * @param <M>              主表类型
      * @param <J>              中间表类型
-     * @return
      */
     private <M, J> boolean bindingJoinColumnsByJoinTableWrapper(M model, AssociationFieldInfo assField, QueryWrapper<J> joinTableWrapper) {
         boolean columnValueIsNull = true;
