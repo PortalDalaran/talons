@@ -28,47 +28,47 @@ import java.util.stream.Collectors;
  */
 public class TalonsAssociationQuery {
     private ObjectFactory<SqlSession> factory;
-    private Map<String, String> queryAssFields = new HashMap<>();
 
     public void setFactory(ObjectFactory<SqlSession> factory) {
         this.factory = factory;
     }
 
     public <M> M query(M model, AssociationTableInfo<M> assTableInfo, List<AssociationQueryField> assQueryFields) throws TalonsException {
-        if (!Objects.isNull(assQueryFields)) {
+        Map<String, String> queryAssFields = new HashMap<>();
+        if (assQueryFields != null) {
             assQueryFields.forEach(f -> queryAssFields.put(f.getTableName(), f.getParameters()));
         }
         //proc ManyToOne
         List<AssociationFieldInfo> m2os = assTableInfo.getManyToOnes();
         if (ObjectUtils.isNotEmpty(m2os)) {
             for (AssociationFieldInfo assField : m2os) {
-                if (queryAssFields.size() > 0 && !queryAssFields.containsKey(assField.getField().getName())) {
+                if (!queryAssFields.isEmpty() && !queryAssFields.containsKey(assField.getField().getName())) {
                     continue;
                 }
-                queryManyToOneField(model, assField);
+                queryManyToOneField(model, assField, queryAssFields);
             }
         }
         //proc OneToMany
         List<AssociationFieldInfo> o2ms = assTableInfo.getOneToManys();
         if (ObjectUtils.isNotEmpty(o2ms)) {
             for (AssociationFieldInfo assField : o2ms) {
-                if (queryAssFields.size() > 0 && !queryAssFields.containsKey(assField.getField().getName())) {
+                if (!queryAssFields.isEmpty() && !queryAssFields.containsKey(assField.getField().getName())) {
                     continue;
                 }
-                queryOneToManyField(model, assTableInfo, assField);
+                queryOneToManyField(model, assTableInfo, assField, queryAssFields);
             }
         }
 
-        //proc OneToMany
+        //proc ManyToMany
         List<AssociationFieldInfo> m2ms = assTableInfo.getManyToManys();
         if (ObjectUtils.isNotEmpty(m2ms)) {
             for (AssociationFieldInfo assField : m2ms) {
                 //如果有自定义查询字段，当前关联字段不在查询字段内则不显示
                 //If there is a user-defined query field, the current associated field will not be displayed if it is not in the query field
-                if (queryAssFields.size() > 0 && !queryAssFields.containsKey(assField.getField().getName())) {
+                if (!queryAssFields.isEmpty() && !queryAssFields.containsKey(assField.getField().getName())) {
                     continue;
                 }
-                queryManyToManyField(model, assField);
+                queryManyToManyField(model, assField, queryAssFields);
             }
         }
         return model;
@@ -85,7 +85,7 @@ public class TalonsAssociationQuery {
      * @param <M>
      * @param <T>
      */
-    private <M, T> void queryManyToOneField(M entity, AssociationFieldInfo assField) {
+    private <M, T> void queryManyToOneField(M entity, AssociationFieldInfo assField, Map<String, String> queryAssFields) {
         String columnName = "";
         String referencedColumnName = "";
         TableInfo targetTableInfo = TableInfoHelper.getTableInfo(assField.getTargetEntity());
@@ -122,24 +122,20 @@ public class TalonsAssociationQuery {
             boolean finalIsCustomField = isCustomField;
             selectResult = Enhancer.create(assField.getFieldClass(), (LazyLoader) () -> {
                 if (finalIsCustomField) {
-                    List<Map<String, Object>> tempList = mapper.selectMaps(wrapper);
-                    return ObjectUtils.isNotEmpty(tempList) ? tempList.get(0) : null;
+                    return mapper.selectMaps(wrapper).stream().findFirst().orElse(null);
                 } else {
                     return mapper.selectOne(wrapper);
                 }
             });
         } else {
             if (isCustomField) {
-                List<Map<String, Object>> tempList = mapper.selectMaps(wrapper);
-                if (ObjectUtils.isNotEmpty(tempList)) {
-                    selectResult = tempList.get(0);
-                }
+                selectResult = mapper.selectMaps(wrapper).stream().findFirst().orElse(null);
             } else {
                 selectResult = mapper.selectOne(wrapper);
             }
         }
         //判断查询结果是Maps还是Model
-        if (entity.getClass() == HashMap.class) {
+        if (entity instanceof HashMap) {
             ((Map<String, Object>) entity).put(assField.getField().getName(), selectResult);
         } else {
             ReflectionUtils.setFieldValue(entity, assField.getField().getName(), selectResult);
@@ -147,16 +143,16 @@ public class TalonsAssociationQuery {
     }
 
     /**
-     * @description 处理一对多的情况
+     * @description 处理多对多的情况
      * @return: void
      * @author wangxiaoli
      * @date 2021/9/16 00:07
      */
-    private <M, T> void queryManyToManyField(M entity, AssociationFieldInfo assField) {
+    private <M, T> void queryManyToManyField(M entity, AssociationFieldInfo assField, Map<String, String> queryAssFields) {
         QueryWrapper<T> targetWrapper = new QueryWrapper<>();
         //有中间表
         int joinTableSize = queryJoinTable(entity, assField, targetWrapper);
-        queryManyEntity(entity, assField, targetWrapper, joinTableSize);
+        queryManyEntity(entity, assField, targetWrapper, joinTableSize, queryAssFields);
     }
 
     /**
@@ -171,7 +167,7 @@ public class TalonsAssociationQuery {
      * @author wangxiaoli
      * @date 2021/9/16 00:07
      */
-    private <M, T> void queryOneToManyField(M entity, AssociationTableInfo<M> assTable, AssociationFieldInfo assField) {
+    private <M, T> void queryOneToManyField(M entity, AssociationTableInfo<M> assTable, AssociationFieldInfo assField, Map<String, String> queryAssFields) {
         QueryWrapper<T> targetWrapper = new QueryWrapper<>();
         int joinTableSize = 0;
         TableInfo targetTableInfo = TableInfoHelper.getTableInfo(assField.getTargetEntity());
@@ -207,11 +203,11 @@ public class TalonsAssociationQuery {
         }
 
         //拼装many端的值
-        queryManyEntity(entity, assField, targetWrapper, joinTableSize);
+        queryManyEntity(entity, assField, targetWrapper, joinTableSize, queryAssFields);
     }
 
     private Object getEntityFieldValue(Object entity, String fieldName) {
-        return entity.getClass() == HashMap.class ? ((Map<String, Object>) entity).get(fieldName) : ReflectionUtils.getFieldValue(entity, fieldName);
+        return entity instanceof HashMap ? ((Map<String, Object>) entity).get(fieldName) : ReflectionUtils.getFieldValue(entity, fieldName);
     }
 
     /**
@@ -224,11 +220,11 @@ public class TalonsAssociationQuery {
      * @param <M>
      * @param <T>
      */
-    private <M, T> void queryManyEntity(M entity, AssociationFieldInfo assField, QueryWrapper<T> targetWrapper, int joinTableSize) {
+    private <M, T> void queryManyEntity(M entity, AssociationFieldInfo assField, QueryWrapper<T> targetWrapper, int joinTableSize, Map<String, String> queryAssFields) {
         //如果查询出中间表，或者主表中没有值，则直接设置空对象
         if (joinTableSize == 0) {
             //判断查询结果是Maps还是Model
-            if (entity.getClass() == HashMap.class) {
+            if (entity instanceof HashMap) {
                 ((Map<String, Object>) entity).put(assField.getName(), Lists.newArrayList());
             } else {
                 ReflectionUtils.setFieldValue(entity, assField.getName(), Lists.newArrayList());
@@ -238,12 +234,12 @@ public class TalonsAssociationQuery {
         //返回的不一定是List 可能是SET
         Object targetList = null;
         if (Boolean.TRUE.equals(assField.getIsLazy())) {
-            targetList = Enhancer.create(assField.getFieldType(), (LazyLoader) () -> findFieldValueListByTargetMapper(assField, targetWrapper));
+            targetList = Enhancer.create(assField.getFieldType(), (LazyLoader) () -> findFieldValueListByTargetMapper(assField, targetWrapper, queryAssFields));
         } else {
-            targetList = findFieldValueListByTargetMapper(assField, targetWrapper);
+            targetList = findFieldValueListByTargetMapper(assField, targetWrapper, queryAssFields);
         }
 
-        if (entity.getClass() == HashMap.class) {
+        if (entity instanceof HashMap) {
             ((Map<String, Object>) entity).put(assField.getField().getName(), targetList);
         } else {
             ReflectionUtils.setFieldValue(entity, assField.getField().getName(), targetList);
@@ -258,7 +254,7 @@ public class TalonsAssociationQuery {
      * @author wangxiaoli
      * @date 2021/9/18 11:25
      */
-    private <M> Object findFieldValueListByTargetMapper(AssociationFieldInfo assField, QueryWrapper<M> wrapper) {
+    private <M> Object findFieldValueListByTargetMapper(AssociationFieldInfo assField, QueryWrapper<M> wrapper, Map<String, String> queryAssFields) {
         boolean isCustomField = false;
         //如果在查询时，有设置关联对象值的情况，ex: user.name,role.id,role.name
         if (queryAssFields.containsKey(assField.getName())) {
@@ -439,11 +435,11 @@ public class TalonsAssociationQuery {
     private <M> Object getJoinColumnValue(M entity, JoinColumn joinColumn, String columnName) {
         Object columnValue;
         // 如果配置中预制了 值，则直接使用
-        if (!Objects.isNull(joinColumn) && StringUtils.isNotBlank(joinColumn.referencedColumnValue())) {
+        if (joinColumn != null && StringUtils.isNotBlank(joinColumn.referencedColumnValue())) {
             columnValue = joinColumn.referencedColumnValue();
         } else {
             //用entity中根据columnName取对应的值
-            if (entity.getClass() == HashMap.class) {
+            if (entity instanceof HashMap) {
                 columnValue = ((Map<String, Object>) entity).get(columnName);
             } else {
                 columnValue = ReflectionUtils.getFieldValue(entity, columnName);
