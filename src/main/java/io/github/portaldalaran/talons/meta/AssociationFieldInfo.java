@@ -2,7 +2,6 @@ package io.github.portaldalaran.talons.meta;
 
 
 import com.baomidou.mybatisplus.core.toolkit.ObjectUtils;
-import com.google.common.collect.Lists;
 import io.github.portaldalaran.talons.annotation.*;
 import io.github.portaldalaran.talons.exception.TalonsException;
 import io.github.portaldalaran.talons.utils.TalonsUtils;
@@ -48,8 +47,8 @@ public class AssociationFieldInfo {
     private String joinTableName;
     private Class<?> joinMapper;
     private Class<?> joinEntity;
-    private List<JoinColumn> joinColumns = Lists.newArrayList();
-    private List<JoinColumn> inverseJoinColumns = Lists.newArrayList();
+    private List<JoinColumn> joinColumns = new ArrayList<>();
+    private List<JoinColumn> inverseJoinColumns = new ArrayList<>();
 
     /**
      * 有中间表和无中间表是两种情况

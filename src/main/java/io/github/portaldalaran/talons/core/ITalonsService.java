@@ -2,7 +2,7 @@ package io.github.portaldalaran.talons.core;
 
 import com.baomidou.mybatisplus.core.conditions.Wrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
-import com.baomidou.mybatisplus.extension.service.IService;
+import com.baomidou.mybatisplus.spring.service.IService;
 import io.github.portaldalaran.talons.utils.UniqueFieldUtils;
 
 import java.io.Serializable;

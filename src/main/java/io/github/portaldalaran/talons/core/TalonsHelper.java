@@ -1,13 +1,13 @@
 package io.github.portaldalaran.talons.core;
 
 import com.baomidou.mybatisplus.core.toolkit.ObjectUtils;
-import com.google.common.collect.Lists;
 import io.github.portaldalaran.talons.exception.TalonsException;
 import io.github.portaldalaran.talons.meta.AssociationQueryField;
 import io.github.portaldalaran.talons.meta.AssociationTableInfo;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -178,7 +178,7 @@ public class TalonsHelper {
             return null;
         }
         AssociationTableInfo<M> assTableInfo = (AssociationTableInfo<M>) init(model.getClass());
-        talonsAssociationQuery.query(model, assTableInfo, Lists.newArrayList());
+        talonsAssociationQuery.query(model, assTableInfo, new ArrayList<>());
         return model;
     }
 

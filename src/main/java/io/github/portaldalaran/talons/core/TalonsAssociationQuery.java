@@ -5,8 +5,6 @@ import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.baomidou.mybatisplus.core.metadata.TableInfo;
 import com.baomidou.mybatisplus.core.metadata.TableInfoHelper;
 import com.baomidou.mybatisplus.core.toolkit.ObjectUtils;
-import com.google.common.base.Joiner;
-import com.google.common.collect.Lists;
 import io.github.portaldalaran.talons.annotation.JoinColumn;
 import io.github.portaldalaran.talons.exception.TalonsException;
 import io.github.portaldalaran.talons.meta.AssociationFieldInfo;
@@ -225,9 +223,9 @@ public class TalonsAssociationQuery {
         if (joinTableSize == 0) {
             //判断查询结果是Maps还是Model
             if (entity instanceof HashMap) {
-                ((Map<String, Object>) entity).put(assField.getName(), Lists.newArrayList());
+                ((Map<String, Object>) entity).put(assField.getName(), new ArrayList<>());
             } else {
-                ReflectionUtils.setFieldValue(entity, assField.getName(), Lists.newArrayList());
+                ReflectionUtils.setFieldValue(entity, assField.getName(), new ArrayList<>());
             }
             return;
         }
@@ -266,7 +264,7 @@ public class TalonsAssociationQuery {
         List<?> targetList = isCustomField ? baseMapper.selectMaps(wrapper) : baseMapper.selectList(wrapper);
 
         if (ObjectUtils.isEmpty(targetList)) {
-            targetList = Lists.newArrayList();
+            targetList = new ArrayList<>();
         }
 
         //如果为set结果集要转为SET
@@ -299,11 +297,11 @@ public class TalonsAssociationQuery {
 
     private <T, J> int procInverseColumns(AssociationFieldInfo assField, QueryWrapper<T> targetWrapper, QueryWrapper<J> joinTableWrapper) {
         //entity的field名称列表
-        List<String> inverseFieldNames = Lists.newArrayList();
+        List<String> inverseFieldNames = new ArrayList<>();
         //entity的数据库字段列表
-        List<String> inverseColumnNames = Lists.newArrayList();
+        List<String> inverseColumnNames = new ArrayList<>();
         //对应targetEntity的字段列表
-        List<String> inverseReferencedColumnNames = Lists.newArrayList();
+        List<String> inverseReferencedColumnNames = new ArrayList<>();
         TableInfo targetTableInfo = TableInfoHelper.getTableInfo(assField.getTargetEntity());
         TableInfo joinTableInfo = TableInfoHelper.getTableInfo(assField.getJoinEntity());
         for (JoinColumn joinColumn : assField.getInverseJoinColumns()) {
@@ -323,7 +321,7 @@ public class TalonsAssociationQuery {
             inverseReferencedColumnNames.add(referencedColumnName);
         }
         //inverseJoinColumns 有多个的情况要处理多个查询值
-        joinTableWrapper.select(Joiner.on(",").join(inverseColumnNames));
+        joinTableWrapper.select(String.join(",", inverseColumnNames));
 
         int columnNum;
         BaseMapper<J> joinTableMapper = (BaseMapper<J>) factory.getObject().getMapper(assField.getJoinMapper());

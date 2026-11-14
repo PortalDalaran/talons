@@ -21,11 +21,10 @@
         <maven.compiler.target>17</maven.compiler.target>
         <!-- 打包时跳过测试 -->
         <skipTests>true</skipTests>
-        <lombok.version>1.18.42</lombok.version>
-        <spring.core.version>6.2.1</spring.core.version>
-        <mybatis-plus.version>3.5.14</mybatis-plus.version>
-        <commons.lang3.version>3.18.0</commons.lang3.version>
-        <guava.version>33.5.0-jre</guava.version>
+        <lombok.version>1.18.48</lombok.version>
+        <spring.framework.version>6.2.19</spring.framework.version>
+        <mybatis-plus.version>3.5.18</mybatis-plus.version>
+        <commons.lang3.version>3.21.0</commons.lang3.version>
 
         <!-- 服务id 也就是setting.xml中的servers.server.id -->
         <serverId>ossrh</serverId>
@@ -35,17 +34,32 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
     </properties>
+
+    <!-- 统一 Spring Framework 各模块版本：避免显式声明的 spring-core 与 starter 传递的
+         spring-context / beans / aop / tx / jdbc 等模块版本错配（6.2.19 vs 6.2.15） -->
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>org.springframework</groupId>
+                <artifactId>spring-framework-bom</artifactId>
+                <version>${spring.framework.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+
     <dependencies>
         <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
             <version>${lombok.version}</version>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.springframework</groupId>
             <artifactId>spring-core</artifactId>
-            <version>${spring.core.version}</version>
-            <scope>provided</scope> <!-- 设置为 provided，只有工具类需要使用到 -->
+            <scope>provided</scope> <!-- 设置为 provided，只有工具类需要使用到；版本由 spring-framework-bom 管理 -->
         </dependency>
         <dependency>
             <groupId>com.baomidou</groupId>
@@ -57,11 +71,6 @@
             <groupId>org.apache.commons</groupId>
             <artifactId>commons-lang3</artifactId>
             <version>${commons.lang3.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>com.google.guava</groupId>
-            <artifactId>guava</artifactId>
-            <version>${guava.version}</version>
         </dependency>
     </dependencies>
     <issueManagement>
@@ -102,15 +111,23 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.16.0</version>
                 <configuration>
                     <source>${maven.compiler.source}</source>
                     <target>${maven.compiler.target}</target>
+                    <annotationProcessorPaths>
+                        <path>
+                            <groupId>org.projectlombok</groupId>
+                            <artifactId>lombok</artifactId>
+                            <version>${lombok.version}</version>
+                        </path>
+                    </annotationProcessorPaths>
                 </configuration>
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-source-plugin</artifactId>
-                <version>3.0.1</version>
+                <version>3.4.0</version>
                 <executions>
                     <execution>
                         <id>attach-sources</id>
@@ -123,9 +140,9 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-javadoc-plugin</artifactId>
-                <version>2.10.4</version>
+                <version>3.12.0</version>
                 <configuration>
-                    <additionalparam>-Xdoclint:none</additionalparam>
+                    <additionalOptions>-Xdoclint:none</additionalOptions>
                 </configuration>
                 <executions>
                     <execution>
@@ -139,7 +156,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-gpg-plugin</artifactId>
-                <version>3.0.1</version>
+                <version>3.2.8</version>
                 <executions>
                     <execution>
                         <id>sign-artifacts</id>
@@ -157,7 +174,11 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-deploy-plugin</artifactId>
+                <version>3.2.0</version>
             </plugin>
+            <!-- 待迁移：nexus-staging-maven-plugin 已弃用，计划替换为
+                 org.sonatype.central:central-publishing-maven-plugin，
+                 需先在 settings.xml 配置 central server 的 token 凭证后再切换 -->
             <plugin>
                 <groupId>org.sonatype.plugins</groupId>
                 <artifactId>nexus-staging-maven-plugin</artifactId>
@@ -172,10 +193,12 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-release-plugin</artifactId>
-                <version>2.5.3</version>
+                <version>3.3.1</version>
             </plugin>
         </plugins>
     </build>
+    <!-- 当前 release 走 nexus-staging (serverId=ossrh)，SNAPSHOT 走 Central Portal (id=central)；
+         两条通道并存，切换发布插件前请确认 settings.xml 中两套凭证均已配置 -->
     <distributionManagement>
         <snapshotRepository>
             <id>central</id>

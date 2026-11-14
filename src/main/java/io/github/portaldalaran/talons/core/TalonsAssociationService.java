@@ -11,8 +11,6 @@ import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.baomidou.mybatisplus.core.toolkit.ObjectUtils;
 import com.baomidou.mybatisplus.core.toolkit.ReflectionKit;
 import com.baomidou.mybatisplus.extension.toolkit.SqlHelper;
-import com.google.common.base.Joiner;
-import com.google.common.collect.Lists;
 import io.github.portaldalaran.talons.annotation.JoinColumn;
 import io.github.portaldalaran.talons.exception.TalonsException;
 import io.github.portaldalaran.talons.meta.AssociationFieldInfo;
@@ -197,7 +195,7 @@ public class TalonsAssociationService {
                 (sqlSession, entity) -> {
                     MapperMethod.ParamMap<T> param = new MapperMethod.ParamMap<>();
                     param.put("et", entity);
-                    sqlSession.update(SqlHelper.getSqlStatement(mapperClass, SqlMethod.UPDATE_BY_ID), param);
+                    return sqlSession.update(SqlHelper.getSqlStatement(mapperClass, SqlMethod.UPDATE_BY_ID), param);
                 });
     }
 
@@ -354,7 +352,7 @@ public class TalonsAssociationService {
         List<JoinColumn> joinColumns = fieldInfo.getJoinColumns();
         List<JoinColumn> inverseJoinColumns = fieldInfo.getInverseJoinColumns();
         //构建新的中间表
-        List<J> joinTableList = Lists.newArrayList();
+        List<J> joinTableList = new ArrayList<>();
         TableInfo targetTableInfo = TableInfoHelper.getTableInfo(fieldInfo.getTargetEntity());
         TableInfo modelTableInfo = TableInfoHelper.getTableInfo(fieldInfo.getFieldClass());
         for (T targetObject : targetList) {
@@ -377,7 +375,7 @@ public class TalonsAssociationService {
 
                 ReflectionUtils.setFieldValue(joinModel, referencedColumnName, columnValue);
             }
-            List<String> inverseColumnNames = Lists.newArrayList();
+            List<String> inverseColumnNames = new ArrayList<>();
             for (JoinColumn joinColumn : inverseJoinColumns) {
                 //如果为空，则默认为关联对象名称+Id
                 String columnName = StringUtils.isNotBlank(joinColumn.name()) ?
@@ -462,10 +460,10 @@ public class TalonsAssociationService {
      */
     private <T, J> void bindingInverseJoinColumns(AssociationFieldInfo assField, QueryWrapper<J> joinTableWrapper, BaseMapper<J> joinTableMapper, QueryWrapper<T> targetQueryWrapper) {
         //数据库的column
-        List<String> inverseColumnNames = Lists.newArrayList();
-        List<String> inverseColumnDataBaseNames = Lists.newArrayList();
+        List<String> inverseColumnNames = new ArrayList<>();
+        List<String> inverseColumnDataBaseNames = new ArrayList<>();
         //关联对象的column
-        List<String> inverseReferencedColumnNames = Lists.newArrayList();
+        List<String> inverseReferencedColumnNames = new ArrayList<>();
         TableInfo targetTableInfo = TableInfoHelper.getTableInfo(assField.getTargetEntity());
         TableInfo joinTableInfo = TableInfoHelper.getTableInfo(assField.getJoinEntity());
         for (JoinColumn joinColumn : assField.getInverseJoinColumns()) {
@@ -481,7 +479,7 @@ public class TalonsAssociationService {
             inverseReferencedColumnNames.add(referencedColumnName);
         }
         //inverseJoinColumns 有多个的情况要处理多个查询值
-        joinTableWrapper.select(Joiner.on(",").join(inverseColumnDataBaseNames));
+        joinTableWrapper.select(String.join(",", inverseColumnDataBaseNames));
 
         List<Map<String, Object>> referencedColumnValues = joinTableMapper.selectMaps(joinTableWrapper);
 

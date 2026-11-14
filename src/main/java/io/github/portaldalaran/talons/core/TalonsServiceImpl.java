@@ -9,8 +9,8 @@ import com.baomidou.mybatisplus.core.metadata.TableInfoHelper;
 import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.baomidou.mybatisplus.core.toolkit.Constants;
 import com.baomidou.mybatisplus.core.toolkit.StringUtils;
-import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.baomidou.mybatisplus.extension.toolkit.SqlHelper;
+import com.baomidou.mybatisplus.spring.service.impl.ServiceImpl;
 import jakarta.annotation.Resource;
 import org.apache.ibatis.binding.MapperMethod;
 
@@ -85,7 +85,7 @@ public class TalonsServiceImpl<M extends BaseMapper<T>, T> extends ServiceImpl<M
         }, (sqlSession, entity) -> {
             MapperMethod.ParamMap<T> param = new MapperMethod.ParamMap<>();
             param.put(Constants.ENTITY, entity);
-            sqlSession.update(getSqlStatement(SqlMethod.UPDATE_BY_ID), param);
+            return sqlSession.update(getSqlStatement(SqlMethod.UPDATE_BY_ID), param);
         });
 
         if (result && isRelational) {

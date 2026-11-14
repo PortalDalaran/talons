@@ -3,10 +3,10 @@ package io.github.portaldalaran.talons.utils;
 import com.baomidou.mybatisplus.core.metadata.TableFieldInfo;
 import com.baomidou.mybatisplus.core.metadata.TableInfo;
 import com.baomidou.mybatisplus.core.toolkit.ObjectUtils;
-import com.google.common.collect.Lists;
 import io.github.portaldalaran.talons.exception.TalonsException;
 import org.apache.commons.lang3.StringUtils;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
@@ -40,7 +40,7 @@ public class TalonsUtils {
      */
     private static String guessEntityClassName(String entityClassName) {
         //以特定字符结尾的持久化对象
-        List<String> lastCharList = Lists.newArrayList("DO", "PO");
+        List<String> lastCharList = new ArrayList<>(Arrays.asList("DO", "PO"));
         for (String lastChar : lastCharList) {
             if (entityClassName.endsWith(lastChar)) {
                 entityClassName = entityClassName.substring(0, entityClassName.lastIndexOf(lastChar));
@@ -57,9 +57,9 @@ public class TalonsUtils {
      * @return string
      */
     public static List<String> guessMapperClassName(String... mapperNames) {
-        List<String> tempNames = Lists.newArrayList();
+        List<String> tempNames = new ArrayList<>();
         //以特定字符结尾的持久化对象
-        List<String> lastCharList = Lists.newArrayList("DO", "PO");
+        List<String> lastCharList = new ArrayList<>(Arrays.asList("DO", "PO"));
         for (String mapperName : mapperNames) {
             if (StringUtils.isNotBlank(mapperName)) {
                 if (!mapperName.endsWith(MAPPER_SUFFIX)) {

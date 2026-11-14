@@ -8,7 +8,6 @@ import com.baomidou.mybatisplus.core.metadata.TableInfoHelper;
 import com.baomidou.mybatisplus.core.toolkit.ObjectUtils;
 import com.baomidou.mybatisplus.core.toolkit.ReflectionKit;
 import com.baomidou.mybatisplus.core.toolkit.StringUtils;
-import com.google.common.base.Joiner;
 import io.github.portaldalaran.talons.annotation.UniqueField;
 import io.github.portaldalaran.talons.exception.TalonsException;
 import io.github.portaldalaran.talons.exception.TalonsUniqueException;
@@ -114,7 +113,7 @@ public class UniqueFieldUtils {
                 tempList.add(uniqueFieldInfo.value.toString());
             }
             if (isCheck) {
-                throw new TalonsUniqueException(message, Joiner.on(",").join(tempList));
+                throw new TalonsUniqueException(message, String.join(",", tempList));
             }
         }
     }

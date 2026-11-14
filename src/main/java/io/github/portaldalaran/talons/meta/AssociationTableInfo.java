@@ -5,7 +5,6 @@ import com.baomidou.mybatisplus.core.metadata.TableInfo;
 import com.baomidou.mybatisplus.core.metadata.TableInfoHelper;
 import com.baomidou.mybatisplus.core.toolkit.ObjectUtils;
 import com.baomidou.mybatisplus.extension.toolkit.SqlHelper;
-import com.google.common.collect.Lists;
 import io.github.portaldalaran.talons.annotation.*;
 import io.github.portaldalaran.talons.exception.TalonsException;
 import lombok.AllArgsConstructor;
@@ -93,7 +92,7 @@ public class AssociationTableInfo<T> {
      * @return 字段关系列表
      */
     private static List<AssociationFieldInfo> initMany2Ones(List<Field> fieldList, List<Class<?>> mappers) throws TalonsException {
-        List<AssociationFieldInfo> many2Ones = Lists.newArrayList();
+        List<AssociationFieldInfo> many2Ones = new ArrayList<>();
         //取所有多对多字段
         List<Field> manyToOneTableFields = fieldList.stream().filter(field -> ObjectUtils.isNotEmpty(field.getAnnotation(ManyToOne.class)))
                 .collect(Collectors.toList());
@@ -114,7 +113,7 @@ public class AssociationTableInfo<T> {
      * @return 字段关系列表
      */
     private static List<AssociationFieldInfo> initOne2Manys(List<Field> fieldList, List<Class<?>> mappers) throws TalonsException {
-        List<AssociationFieldInfo> one2Manys = Lists.newArrayList();
+        List<AssociationFieldInfo> one2Manys = new ArrayList<>();
         //取所有一对多字段
         List<Field> oneToManyTableFields = fieldList.stream().filter(field -> ObjectUtils.isNotEmpty(field.getAnnotation(OneToMany.class)))
                 .collect(Collectors.toList());
