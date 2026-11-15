@@ -1,7 +1,7 @@
 # MyBatis-Plus 3.5.18 适配方案
 
 > 适用版本：mybatis-plus 3.5.14 → 3.5.18
-> 项目：talons 3.0.2
+> 项目：talons 3.1.0
 
 ---
 
@@ -228,7 +228,7 @@ mvn clean compile
 ```bash
 mvn clean package -Dgpg.skip=true
 ```
-预期：`BUILD SUCCESS`，生成 `talons-3.0.2.jar`、`talons-3.0.2-sources.jar`、`talons-3.0.2-javadoc.jar`
+预期：`BUILD SUCCESS`，生成 `talons-3.1.0.jar`、`talons-3.1.0-sources.jar`、`talons-3.1.0-javadoc.jar`
 
 ### 3. 依赖树确认
 ```bash

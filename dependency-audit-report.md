@@ -1,7 +1,8 @@
 # Talons 依赖升级与项目审计报告
 
 > 审计日期：2026-11-14
-> 项目版本：3.0.2
+> 审计对象版本：3.0.2
+> 当前版本：3.1.0（2026-11-15 补记见文末）
 > Java 版本：17
 > 复核修正：2026-11-14（见第五节）
 
@@ -147,11 +148,11 @@ Guava 替换涉及 **7 个源码文件**，另有 2 个文件为 MP 包路径迁
 | 1 | 消费方破坏性变更未披露 | P0 | `README.md` 补全环境要求与 Breaking Change 章节，明确 MP ≥ 3.5.18；`CLAUDE.md` 增加兼容性要求；迁移指南新增"消费方兼容性影响"章节 | ✅ 已修正 |
 | 2 | Spring 模块版本错配（core 6.2.19 vs 其余 6.2.15） | P0 | 引入 `spring-framework-bom:6.2.19`，移除 `spring-core` 显式版本 | ✅ 已修正 |
 | 3 | 发布通道新旧混用 | P0 | pom 添加待办注释、`CLAUDE.md` 记录凭证约束、本报告描述现状；**未切换插件**，需 Central Portal token 与发版决策 | ⚠️ 已标注，待决策 |
-| 4 | 零回归测试 | P1 | 报告与 README 明确标注发布前需集成验证；未引入测试框架（需业务库环境） | ⚠️ 已标注，待补 |
-| 5 | 文档未同步（版本 3.0.1、依赖清单含已删 Guava、"均为 provided" 不准） | P1 | `CLAUDE.md` 全量同步为 3.0.2 真实依赖表 | ✅ 已修正 |
+| 4 | 零回归测试 | P1 | 2026-11-14 仅标注缺口。2026-11-15 已补单元测试与 H2 集成测试，`mvn test` 默认执行 | ✅ 已补，见文末 |
+| 5 | 文档未同步（版本 3.0.1、依赖清单含已删 Guava、"均为 provided" 不准） | P1 | `CLAUDE.md` 在 3.0.2 复核时已按当时依赖表同步；2026-11-15 再次对齐为 Boot 3.5.16 / Spring 6.2.19 | ✅ 已修正 |
 | 6 | 报告措辞偏差（"7 个源码文件"、"3MB+"、"无业务逻辑变更"、"修复多个 CVE"） | P1/P2 | 逐条改为准确表述，补充行为差异说明 | ✅ 已修正 |
 | 7 | `target/` 未忽略（45 文件含 3 个 jar） | P2 | `.gitignore` 增加 `/target/`、`*.iml` | ✅ 已修正 |
-| 8 | 版本号语义（3.0.2 含不兼容变更） | P2 | README / CLAUDE.md 标注 breaking；**未改版本号**，避免打乱发版计划 | ⚠️ 已标注，待决策 |
+| 8 | 版本号语义（3.0.2 含包路径不兼容变更） | P2 | 2026-11-14 当时未再改版本号。当前版本为 3.1.0；包路径变更仍归 3.0.2，3.1.0 继续运行在 Spring Boot 3.x | ✅ 已在 README / CLAUDE.md 写明 |
 | 9 | 技术声明实证 | — | `javap` 确认 `BiFunction<..., Integer>` 签名；`jar tf` 确认 IService/ServiceImpl 位于 `mybatis-plus-spring-3.5.18.jar` | ✅ 已验证 |
 | 10 | 修正后构建复验 | — | `mvn clean package -Dgpg.skip=true` + `dependency:tree` 校验 Spring 版本统一 | ✅ BUILD SUCCESS，Spring 全部模块 6.2.19 |
 
@@ -169,4 +170,21 @@ Guava 替换涉及 **7 个源码文件**，另有 2 个文件为 MP 包路径迁
 | MP 破坏性变更实证 | `javap` + `jar tf` | `BiFunction<SqlSession,E,Integer>` 签名确认；`IService` / `ServiceImpl` 位于 `mybatis-plus-spring-3.5.18.jar` |
 | 仓库卫生 | `git check-ignore -v target/talons-3.0.2.jar` | 命中 `.gitignore:2:/target/`，`target/` 已从 `git status` 消失 |
 
-**结论**：P0-2 已关闭，P0-1 与 P1 文档同步已关闭；发布前仍需处理 P0-3（发布通道与 Central Portal token 决策）与 P1（回归测试）。
+**结论（2026-11-14，针对 3.0.2）**：P0-2 已关闭，P0-1 与 P1 文档同步已关闭；发布通道（P0-3）仍待 Central Portal token 决策。回归测试已于 2026-11-15 补上，见下一节。
+
+---
+
+## 补记（2026-11-15）
+
+当前工作区版本为 **3.1.0**，平台没有升到 Spring Boot 4。与 3.0.2 复核时相比：
+
+| 项 | 现状 |
+|----|------|
+| MyBatis-Plus | `mybatis-plus-spring-boot3-starter` **3.5.18.1** |
+| Spring Boot / Framework | **3.5.16** / **6.2.19**（`spring-framework-bom` 写在 `spring-boot-dependencies` 之前） |
+| 测试 | H2 **2.5.252**，`skipTests=false`。级联删除条件分组、空 `Set` / `LinkedHashSet`、无中间表时保留无关目标行均有用例 |
+| 文档 | `README.md` 与 `CLAUDE.md` 按上述版本书写。包路径 breaking change 记在 3.0.2，不记在 3.1.0 |
+
+`dependencyManagement` 里的 logback、log4j、asm、json-smart 只影响本仓库解析，不会随依赖传递给消费方。消费方会带到的编译依赖仍是 `commons-lang3`。
+
+发布通道（P0-3）仍待 Central Portal token 决策。

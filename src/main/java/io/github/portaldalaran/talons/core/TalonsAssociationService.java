@@ -27,9 +27,11 @@ import org.springframework.beans.factory.ObjectFactory;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 /**
@@ -65,7 +67,7 @@ public class TalonsAssociationService {
             List<CascadeType> cascadeTypes = o2mFieldInfo.getCascadeTypes();
             String mappedBy = o2mFieldInfo.getMappedBy();
 
-            List<T> targetList = (List<T>) ReflectionUtils.getFieldValue(model, o2mFieldInfo.getName());
+            Collection<T> targetList = (Collection<T>) ReflectionUtils.getFieldValue(model, o2mFieldInfo.getName());
             if (Objects.isNull(targetList)) {
                 targetList = new ArrayList<>();
             }
@@ -108,10 +110,11 @@ public class TalonsAssociationService {
                     saveJoinTable(model, o2mFieldInfo, targetList);
                 }
             } else {
-                //关联表保存 没有中间表，one端有所有关系类型
-                //先删除不是列表中的但是ID还在的记录
+                //没有中间表。ALL、REMOVE 删除不在列表中的子行；MERGE 只解除外键，保留子行
                 if (ObjectUtils.isNotEmpty(modelId)) {
-                    removeOne2ManyField(model, assTableInfo, o2mFieldInfo, targetList, true);
+                    boolean isDeleteTarget = cascadeTypes.contains(CascadeType.ALL)
+                            || cascadeTypes.contains(CascadeType.REMOVE);
+                    removeOne2ManyField(model, assTableInfo, o2mFieldInfo, targetList, isDeleteTarget);
                 }
                 //没有中间表，则子表必定有字段与主表关联
                 List<JoinColumn> joinColumnList = o2mFieldInfo.getJoinColumns();
@@ -133,7 +136,7 @@ public class TalonsAssociationService {
         for (AssociationFieldInfo m2mFieldInfo : m2ms) {
             //ALL,PERSIST,MERGE,REMOVE,REFRESH,DETACH
             List<CascadeType> cascadeTypes = m2mFieldInfo.getCascadeTypes();
-            List<T> targetList = (List<T>) ReflectionUtils.getFieldValue(model, m2mFieldInfo.getName());
+            Collection<T> targetList = (Collection<T>) ReflectionUtils.getFieldValue(model, m2mFieldInfo.getName());
             if (ObjectUtils.isEmpty(targetList)) {
                 continue;
             }
@@ -173,7 +176,7 @@ public class TalonsAssociationService {
      * @return
      */
     @Transactional(rollbackFor = {Exception.class})
-    public <T> boolean entitySaveOrUpdate(Class<?> mapperClass, Class<?> entityClass, List<T> valueList) {
+    public <T> boolean entitySaveOrUpdate(Class<?> mapperClass, Class<?> entityClass, Collection<T> valueList) {
         BaseMapper<T> mapper = (BaseMapper<T>) factory.getObject().getMapper(mapperClass);
 //        //如果有唯一性判断
 //        for (T target : valueList) {
@@ -275,7 +278,7 @@ public class TalonsAssociationService {
      * @throws TalonsException
      */
     @Transactional(rollbackFor = {Exception.class})
-    public <M, T> void removeOne2ManyField(M model, AssociationTableInfo<M> assTableInfo, AssociationFieldInfo rsFieldInfo, List<T> targetList, boolean isDeleteTarget) throws TalonsException {
+    public <M, T> void removeOne2ManyField(M model, AssociationTableInfo<M> assTableInfo, AssociationFieldInfo rsFieldInfo, Collection<T> targetList, boolean isDeleteTarget) throws TalonsException {
         BaseMapper<T> targetMapper = (BaseMapper<T>) factory.getObject().getMapper(rsFieldInfo.getTargetMapper());
         QueryWrapper<T> targetWrapper = new QueryWrapper<>();
         UpdateWrapper<T> updateWrapper = new UpdateWrapper<>();
@@ -327,10 +330,11 @@ public class TalonsAssociationService {
             }
         }
         if (ObjectUtils.isNotEmpty(targetList)) {
-            List<Object> needIds = targetList.stream().filter(obj -> Objects.nonNull(this.getEntityId(obj))).map(this::getEntityId).collect(Collectors.toList());
+            List<Object> needIds = targetList.stream().map(this::getEntityId).filter(Objects::nonNull).collect(Collectors.toList());
             //删除的ID中不包括 现在列表中已经存在的ID
             if (!needIds.isEmpty()) {
-                targetWrapper.and(i -> i.notIn(targetTableInfo.getKeyProperty(), needIds));
+                String keyColumn = keyColumn(targetTableInfo);
+                targetWrapper.and(i -> i.notIn(keyColumn, needIds));
             }
         }
 
@@ -348,7 +352,7 @@ public class TalonsAssociationService {
     }
 
     @Transactional(rollbackFor = {Exception.class})
-    public <M, T, J> List<J> saveJoinTable(M model, AssociationFieldInfo fieldInfo, List<T> targetList) throws TalonsException {
+    public <M, T, J> List<J> saveJoinTable(M model, AssociationFieldInfo fieldInfo, Collection<T> targetList) throws TalonsException {
         List<JoinColumn> joinColumns = fieldInfo.getJoinColumns();
         List<JoinColumn> inverseJoinColumns = fieldInfo.getInverseJoinColumns();
         //构建新的中间表
@@ -412,7 +416,7 @@ public class TalonsAssociationService {
      * @return
      */
     @Transactional(rollbackFor = {Exception.class})
-    public <M, T, J> boolean deleteJoinTable(M model, AssociationFieldInfo assField, List<T> targetList, boolean isDeleteTarget) {
+    public <M, T, J> boolean deleteJoinTable(M model, AssociationFieldInfo assField, Collection<T> targetList, boolean isDeleteTarget) {
         //中间表查询Wrapper,查询出关联表对应的referencedColumn Values
         QueryWrapper<J> joinTableWrapper = new QueryWrapper<>();
         //处理主表与中间表
@@ -425,25 +429,23 @@ public class TalonsAssociationService {
         BaseMapper<J> joinTableMapper = (BaseMapper<J>) factory.getObject().getMapper(assField.getJoinMapper());
         //关联表查询条件
         QueryWrapper<T> targetQueryWrapper = new QueryWrapper<>();
-        //处理中间表与关联表
-        bindingInverseJoinColumns(assField, joinTableWrapper, joinTableMapper, targetQueryWrapper);
+        //处理中间表与关联表；返回是否拼装出有效的关联目标过滤条件
+        boolean hasTargetCondition = bindingInverseJoinColumns(assField, joinTableWrapper, joinTableMapper, targetQueryWrapper);
 
         if (ObjectUtils.isNotEmpty(targetList)) {
             TableInfo targetTableInfo = TableInfoHelper.getTableInfo(assField.getTargetEntity());
-            List<Object> needIds = targetList.stream().map(this::getEntityId).collect(Collectors.toList());
-            //删除的ID中不包括 现在列表中已经存在的ID
+            // 未持久化的对象没有主键，放进 NOT IN 会让整个条件变成 UNKNOWN，孤儿行删不掉
+            List<Object> needIds = targetList.stream().map(this::getEntityId).filter(Objects::nonNull).collect(Collectors.toList());
             if (!needIds.isEmpty()) {
-                targetQueryWrapper.and(i -> i.notIn(targetTableInfo.getKeyProperty(), needIds));
+                String keyColumn = keyColumn(targetTableInfo);
+                targetQueryWrapper.and(i -> i.notIn(keyColumn, needIds));
             }
         }
 
-        if (isDeleteTarget) {
+        if (isDeleteTarget && hasTargetCondition) {
             BaseMapper<T> targetMapper = (BaseMapper<T>) factory.getObject().getMapper(assField.getTargetMapper());
-            boolean isDeleted = SqlHelper.retBool(targetMapper.delete(targetQueryWrapper));
-            //如果删除失败，则直接return
-            if (!isDeleted) {
-                return false;
-            }
+            // 关联目标可能已经不存在（删除 0 行），此时仍必须继续清理中间表，不能提前返回
+            targetMapper.delete(targetQueryWrapper);
         }
         return SqlHelper.retBool(joinTableMapper.delete(joinTableWrapper));
     }
@@ -458,7 +460,7 @@ public class TalonsAssociationService {
      * @param <T>                关联表类型
      * @param <J>                中间表类型
      */
-    private <T, J> void bindingInverseJoinColumns(AssociationFieldInfo assField, QueryWrapper<J> joinTableWrapper, BaseMapper<J> joinTableMapper, QueryWrapper<T> targetQueryWrapper) {
+    private <T, J> boolean bindingInverseJoinColumns(AssociationFieldInfo assField, QueryWrapper<J> joinTableWrapper, BaseMapper<J> joinTableMapper, QueryWrapper<T> targetQueryWrapper) {
         //数据库的column
         List<String> inverseColumnNames = new ArrayList<>();
         List<String> inverseColumnDataBaseNames = new ArrayList<>();
@@ -482,17 +484,39 @@ public class TalonsAssociationService {
         joinTableWrapper.select(String.join(",", inverseColumnDataBaseNames));
 
         List<Map<String, Object>> referencedColumnValues = joinTableMapper.selectMaps(joinTableWrapper);
-
-        for (Map<String, Object> map : referencedColumnValues) {
-            QueryWrapper<T> tOrQWrapper = targetQueryWrapper.or();
-            //如果有多个关联字段的需要用or处理
-            for (int i = 0; i < assField.getInverseJoinColumns().size(); i++) {
-                JoinColumn joinColumn = assField.getInverseJoinColumns().get(i);
-                Object objValue = StringUtils.isNotBlank(joinColumn.referencedColumnValue()) ? joinColumn.referencedColumnValue() : map.get(inverseColumnNames.get(i));
-
-                tOrQWrapper.eq(TalonsUtils.getDataBaseColumnName(inverseReferencedColumnNames.get(i), targetTableInfo), objValue);
-            }
+        // 中间表没有任何关联行时不能删除关联实体：空 Wrapper 的 delete 会清空整张目标表
+        if (ObjectUtils.isEmpty(referencedColumnValues)) {
+            return false;
         }
+
+        // 每一行单独成组，行与行之间 OR，再与外层 NOT IN 用 AND 连接。
+        // 直接 or().eq() 再 and(notIn) 会生成 "a OR b AND c"，AND 优先级更高，会误删要保留的行。
+        targetQueryWrapper.and(group -> {
+            for (int rowIndex = 0; rowIndex < referencedColumnValues.size(); rowIndex++) {
+                Map<String, Object> map = referencedColumnValues.get(rowIndex);
+                Consumer<QueryWrapper<T>> rowPredicate = rowWrapper -> {
+                    for (int i = 0; i < assField.getInverseJoinColumns().size(); i++) {
+                        JoinColumn joinColumn = assField.getInverseJoinColumns().get(i);
+                        Object objValue = StringUtils.isNotBlank(joinColumn.referencedColumnValue())
+                                ? joinColumn.referencedColumnValue()
+                                : TalonsUtils.getMapValue(map, inverseColumnNames.get(i), inverseColumnDataBaseNames.get(i));
+                        rowWrapper.eq(TalonsUtils.getDataBaseColumnName(inverseReferencedColumnNames.get(i), targetTableInfo), objValue);
+                    }
+                };
+                if (rowIndex == 0) {
+                    group.and(rowPredicate);
+                } else {
+                    group.or(rowPredicate);
+                }
+            }
+        });
+        return true;
+    }
+
+    private static String keyColumn(TableInfo tableInfo) {
+        return StringUtils.isNotBlank(tableInfo.getKeyColumn())
+                ? tableInfo.getKeyColumn()
+                : tableInfo.getKeyProperty();
     }
 
     /**

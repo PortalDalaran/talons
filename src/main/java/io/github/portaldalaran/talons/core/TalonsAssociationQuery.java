@@ -221,11 +221,13 @@ public class TalonsAssociationQuery {
     private <M, T> void queryManyEntity(M entity, AssociationFieldInfo assField, QueryWrapper<T> targetWrapper, int joinTableSize, Map<String, String> queryAssFields) {
         //如果查询出中间表，或者主表中没有值，则直接设置空对象
         if (joinTableSize == 0) {
+            // 空关联必须能赋给字段声明类型，具体 Set 实现不能塞 ArrayList
+            Object emptyValue = TalonsUtils.newCompatibleCollection(assField.getFieldType(), null);
             //判断查询结果是Maps还是Model
             if (entity instanceof HashMap) {
-                ((Map<String, Object>) entity).put(assField.getName(), new ArrayList<>());
+                ((Map<String, Object>) entity).put(assField.getName(), emptyValue);
             } else {
-                ReflectionUtils.setFieldValue(entity, assField.getName(), new ArrayList<>());
+                ReflectionUtils.setFieldValue(entity, assField.getName(), emptyValue);
             }
             return;
         }
@@ -247,7 +249,7 @@ public class TalonsAssociationQuery {
     /**
      * @description 根据条件返回查询结果
      * 当前台传入查询条件里边有关联表字段时，返回的对象为Map,或则为T model
-     * 当Field类型为List、Collection时返回List ,为HashSet、Set时返回Set
+     * 当 Field 类型为 List、Collection 时返回 List；为 Set 或其实现类时返回对应集合
      * @return: java.lang.Object
      * @author wangxiaoli
      * @date 2021/9/18 11:25
@@ -267,8 +269,10 @@ public class TalonsAssociationQuery {
             targetList = new ArrayList<>();
         }
 
-        //如果为set结果集要转为SET
-        return (assField.getFieldType() == Set.class || assField.getFieldType() == HashSet.class) ? new HashSet<>(targetList) : targetList;
+        if (assField.getFieldType() != null && Set.class.isAssignableFrom(assField.getFieldType())) {
+            return TalonsUtils.newCompatibleCollection(assField.getFieldType(), targetList);
+        }
+        return targetList;
 
     }
 
@@ -337,7 +341,8 @@ public class TalonsAssociationQuery {
                 for (int i = 0; i < inverseFieldNames.size(); i++) {
                     String columnName = inverseFieldNames.get(i);
                     String referencedColumnName = TalonsUtils.guessReferencedColumnName(inverseReferencedColumnNames.get(i));
-                    refWrapper.eq(TalonsUtils.getDataBaseColumnName(referencedColumnName, targetTableInfo), refMap.get(columnName));
+                    refWrapper.eq(TalonsUtils.getDataBaseColumnName(referencedColumnName, targetTableInfo),
+                            TalonsUtils.getMapValue(refMap, columnName, inverseColumnNames.get(i)));
                 }
             }
         } else {
