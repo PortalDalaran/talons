@@ -28,7 +28,7 @@ public class TalonsHelper {
      * 储存实体关系信息
      * Store entity relationship information
      */
-    private static Map<Class<?>, AssociationTableInfo> ASSOCIATION_TABLE_MAP = new ConcurrentHashMap<>();
+    private static Map<Class<?>, AssociationTableInfo<?>> ASSOCIATION_TABLE_MAP = new ConcurrentHashMap<>();
 
 //    @Resource
     private TalonsAssociationService talonsAssociationService;
@@ -53,9 +53,10 @@ public class TalonsHelper {
      * @param <M>
      * @throws TalonsException
      */
+    @SuppressWarnings("unchecked")
     public static <M> AssociationTableInfo<M> init(Class<M> modelClass) throws TalonsException {
         if (ASSOCIATION_TABLE_MAP.containsKey(modelClass)) {
-            return ASSOCIATION_TABLE_MAP.get(modelClass);
+            return (AssociationTableInfo<M>) ASSOCIATION_TABLE_MAP.get(modelClass);
         }
         AssociationTableInfo<M> rsTableInfo = AssociationTableInfo.instance(modelClass);
         ASSOCIATION_TABLE_MAP.put(modelClass, rsTableInfo);
@@ -102,6 +103,7 @@ public class TalonsHelper {
      * @return: M
      */
     @Transactional(rollbackFor = {Exception.class})
+    @SuppressWarnings("unchecked")
     public <M> M saveOrUpdate(M model) throws TalonsException {
         if (Objects.isNull(model)) {
             return null;
@@ -152,6 +154,7 @@ public class TalonsHelper {
      * @throws TalonsException
      */
     @Transactional(rollbackFor = {Exception.class})
+    @SuppressWarnings("unchecked")
     public <M> M remove(M model) throws TalonsException {
         if (ObjectUtils.isEmpty(model)) {
             return model;
@@ -173,6 +176,7 @@ public class TalonsHelper {
      * @throws TalonsException
      */
     @Transactional(readOnly = true)
+    @SuppressWarnings("unchecked")
     public <M> M query(M model) throws TalonsException {
         if (Objects.isNull(model)) {
             return null;
@@ -194,7 +198,7 @@ public class TalonsHelper {
      * @throws TalonsException
      */
     @Transactional(readOnly = true)
-    public <M> List<M> query(List<M> list, Class modelClass, List<AssociationQueryField> associationQueryFields) throws TalonsException {
+    public <M> List<M> query(List<M> list, Class<M> modelClass, List<AssociationQueryField> associationQueryFields) throws TalonsException {
         if (ObjectUtils.isEmpty(list)) {
             return list;
         }

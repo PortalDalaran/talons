@@ -78,7 +78,7 @@ public class TalonsServiceImpl<M extends BaseMapper<T>, T> extends ServiceImpl<M
         TableInfo tableInfo = TableInfoHelper.getTableInfo(this.getEntityClass());
         String keyProperty = tableInfo.getKeyProperty();
 
-        boolean result = SqlHelper.saveOrUpdateBatch(this.getEntityClass(), this.getMapperClass(), this.log, entityList, batchSize, (sqlSession, entity) -> {
+        boolean result = SqlHelper.saveOrUpdateBatch(this.getSqlSessionFactory(), this.getMapperClass(), this.log, entityList, batchSize, (sqlSession, entity) -> {
             Object idVal = tableInfo.getPropertyValue(entity, keyProperty);
             return StringUtils.checkValNull(idVal)
                     || CollectionUtils.isEmpty(sqlSession.selectList(getSqlStatement(SqlMethod.SELECT_BY_ID), entity));
@@ -147,7 +147,7 @@ public class TalonsServiceImpl<M extends BaseMapper<T>, T> extends ServiceImpl<M
         TableInfo tableInfo = TableInfoHelper.getTableInfo(this.getEntityClass());
         String keyProperty = tableInfo.getKeyProperty();
 
-        QueryWrapper<T> wrapper = new QueryWrapper();
+        QueryWrapper<T> wrapper = new QueryWrapper<>();
         wrapper.in(keyProperty, ids);
         List<T> tempList = list(wrapper);
         if (isRelational) {
@@ -188,7 +188,9 @@ public class TalonsServiceImpl<M extends BaseMapper<T>, T> extends ServiceImpl<M
 
     @Override
     public List<T> selectBatchIds(List<Long> ids, boolean isRelational) {
-        List<T> result = this.baseMapper.selectBatchIds(ids);
+        TableInfo tableInfo = TableInfoHelper.getTableInfo(this.getEntityClass());
+        String keyColumn = StringUtils.isNotBlank(tableInfo.getKeyColumn()) ? tableInfo.getKeyColumn() : tableInfo.getKeyProperty();
+        List<T> result = this.baseMapper.selectList(new QueryWrapper<T>().in(keyColumn, ids));
         if (isRelational) {
             talonsHelper.query(result, this.getEntityClass(), null);
         }

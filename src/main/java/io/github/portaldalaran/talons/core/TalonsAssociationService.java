@@ -9,7 +9,6 @@ import com.baomidou.mybatisplus.core.metadata.TableInfo;
 import com.baomidou.mybatisplus.core.metadata.TableInfoHelper;
 import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.baomidou.mybatisplus.core.toolkit.ObjectUtils;
-import com.baomidou.mybatisplus.core.toolkit.ReflectionKit;
 import com.baomidou.mybatisplus.extension.toolkit.SqlHelper;
 import io.github.portaldalaran.talons.annotation.JoinColumn;
 import io.github.portaldalaran.talons.exception.TalonsException;
@@ -59,6 +58,7 @@ public class TalonsAssociationService {
     }
 
     @Transactional(rollbackFor = {Exception.class})
+    @SuppressWarnings("unchecked")
     public <M, T> void saveOrUpdateOneToManyTable(M model, AssociationTableInfo<M> assTableInfo) throws TalonsException {
         List<AssociationFieldInfo> o2ms = assTableInfo.getOneToManys();
         Object modelId = getEntityId(model);
@@ -90,7 +90,7 @@ public class TalonsAssociationService {
                  */
                 //因为实体名称后边有DO所以要去掉
                 String tableInfoColumnId = TalonsUtils.guessReferencedColumnName(assTableInfo.getName());
-                if (StringUtils.equalsIgnoreCase(mappedBy, tableInfoColumnId) || ObjectUtils.isEmpty(mappedBy)) {
+                if ((mappedBy == null ? tableInfoColumnId == null : mappedBy.equalsIgnoreCase(tableInfoColumnId)) || ObjectUtils.isEmpty(mappedBy)) {
                     if (ObjectUtils.isNotEmpty(modelId)) {
                         boolean isDeleteTarget = false;
                         if (cascadeTypes.contains(CascadeType.ALL) || cascadeTypes.contains(CascadeType.REMOVE)) {
@@ -131,6 +131,7 @@ public class TalonsAssociationService {
     }
 
     @Transactional(rollbackFor = {Exception.class})
+    @SuppressWarnings("unchecked")
     public <M, T> void saveOrUpdateManyToManyTable(M model, AssociationTableInfo<M> assTableInfo) throws TalonsException {
         List<AssociationFieldInfo> m2ms = assTableInfo.getManyToManys();
         for (AssociationFieldInfo m2mFieldInfo : m2ms) {
@@ -176,6 +177,7 @@ public class TalonsAssociationService {
      * @return
      */
     @Transactional(rollbackFor = {Exception.class})
+    @SuppressWarnings("unchecked")
     public <T> boolean entitySaveOrUpdate(Class<?> mapperClass, Class<?> entityClass, Collection<T> valueList) {
         BaseMapper<T> mapper = (BaseMapper<T>) factory.getObject().getMapper(mapperClass);
 //        //如果有唯一性判断
@@ -185,13 +187,13 @@ public class TalonsAssociationService {
         TableInfo targetTableInfo = TableInfoHelper.getTableInfo(entityClass);
         String keyProperty = targetTableInfo.getKeyProperty();
         //参考的mybatis plus的代码
-        return SqlHelper.saveOrUpdateBatch(entityClass,
+        return SqlHelper.saveOrUpdateBatch(SqlHelper.FACTORY,
                 mapperClass,
                 LogFactory.getLog(TalonsHelper.class),
                 valueList,
                 1000,
                 (sqlSession, entity) -> {
-                    Object idVal = ReflectionKit.getFieldValue(entity, keyProperty);
+                    Object idVal = ReflectionUtils.getFieldValue(entity, keyProperty);
                     return com.baomidou.mybatisplus.core.toolkit.StringUtils.checkValNull(idVal)
                             || CollectionUtils.isEmpty(sqlSession.selectList(SqlHelper.getSqlStatement(mapperClass, SqlMethod.SELECT_BY_ID), entity));
                 },
@@ -246,7 +248,7 @@ public class TalonsAssociationService {
             String mappedBy = associationFieldInfo.getMappedBy();
             //如果主控端在当前model，并且有对应权限，则删除关联表
             String tableInfoColumnId = TalonsUtils.guessReferencedColumnName(associationTable.getName());
-            if (StringUtils.equalsIgnoreCase(mappedBy, tableInfoColumnId) || ObjectUtils.isEmpty(mappedBy)) {
+            if ((mappedBy == null ? tableInfoColumnId == null : mappedBy.equalsIgnoreCase(tableInfoColumnId)) || ObjectUtils.isEmpty(mappedBy)) {
                 boolean isDeleteTarget = false;
                 //ALL,REMOVE，下可以删除关联表
                 if (cascadeTypes.contains(CascadeType.ALL) || cascadeTypes.contains(CascadeType.REMOVE)) {
@@ -278,6 +280,7 @@ public class TalonsAssociationService {
      * @throws TalonsException
      */
     @Transactional(rollbackFor = {Exception.class})
+    @SuppressWarnings("unchecked")
     public <M, T> void removeOne2ManyField(M model, AssociationTableInfo<M> assTableInfo, AssociationFieldInfo rsFieldInfo, Collection<T> targetList, boolean isDeleteTarget) throws TalonsException {
         BaseMapper<T> targetMapper = (BaseMapper<T>) factory.getObject().getMapper(rsFieldInfo.getTargetMapper());
         QueryWrapper<T> targetWrapper = new QueryWrapper<>();
@@ -343,7 +346,7 @@ public class TalonsAssociationService {
         } else {
             T targetModel = null;
             try {
-                targetModel = (T) rsFieldInfo.getTargetEntity().newInstance();
+                targetModel = (T) rsFieldInfo.getTargetEntity().getDeclaredConstructor().newInstance();
             } catch (Exception e) {
                 throw new TalonsException(ERROR_ASSOCIATION_TARGET_ENTITY_NEW_INSTANCE);
             }
@@ -352,6 +355,7 @@ public class TalonsAssociationService {
     }
 
     @Transactional(rollbackFor = {Exception.class})
+    @SuppressWarnings("unchecked")
     public <M, T, J> List<J> saveJoinTable(M model, AssociationFieldInfo fieldInfo, Collection<T> targetList) throws TalonsException {
         List<JoinColumn> joinColumns = fieldInfo.getJoinColumns();
         List<JoinColumn> inverseJoinColumns = fieldInfo.getInverseJoinColumns();
@@ -362,7 +366,7 @@ public class TalonsAssociationService {
         for (T targetObject : targetList) {
             J joinModel = null;
             try {
-                joinModel = (J) fieldInfo.getJoinEntity().newInstance();
+                joinModel = (J) fieldInfo.getJoinEntity().getDeclaredConstructor().newInstance();
             } catch (Exception e) {
                 throw new TalonsException(ERROR_ASSOCIATION_JOIN_ENTITY_NEW_INSTANCE);
             }
@@ -416,6 +420,7 @@ public class TalonsAssociationService {
      * @return
      */
     @Transactional(rollbackFor = {Exception.class})
+    @SuppressWarnings("unchecked")
     public <M, T, J> boolean deleteJoinTable(M model, AssociationFieldInfo assField, Collection<T> targetList, boolean isDeleteTarget) {
         //中间表查询Wrapper,查询出关联表对应的referencedColumn Values
         QueryWrapper<J> joinTableWrapper = new QueryWrapper<>();

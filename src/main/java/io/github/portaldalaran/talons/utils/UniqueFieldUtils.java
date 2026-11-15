@@ -6,7 +6,6 @@ import com.baomidou.mybatisplus.core.metadata.TableFieldInfo;
 import com.baomidou.mybatisplus.core.metadata.TableInfo;
 import com.baomidou.mybatisplus.core.metadata.TableInfoHelper;
 import com.baomidou.mybatisplus.core.toolkit.ObjectUtils;
-import com.baomidou.mybatisplus.core.toolkit.ReflectionKit;
 import com.baomidou.mybatisplus.core.toolkit.StringUtils;
 import io.github.portaldalaran.talons.annotation.UniqueField;
 import io.github.portaldalaran.talons.exception.TalonsException;
@@ -83,7 +82,7 @@ public class UniqueFieldUtils {
         //定位是哪个字段值出问题了
         for (T entity : resultList) {
             for (UniqueFieldInfo uniqueField : uniqueFieldInfoList) {
-                Object value = ReflectionKit.getFieldValue(entity, uniqueField.getFieldName());
+                Object value = ReflectionUtils.getFieldValue(entity, uniqueField.getFieldName());
                 if (Objects.equals(value, uniqueField.value)) {
                     throw new TalonsUniqueException(uniqueField.getMessage(), value.toString());
                 }
@@ -104,7 +103,7 @@ public class UniqueFieldUtils {
             List<String> tempList = new ArrayList<>();
             String message = "";
             for (UniqueFieldInfo uniqueFieldInfo : uniqueFieldInfoList) {
-                Object value = ReflectionKit.getFieldValue(entity, uniqueFieldInfo.getFieldName());
+                Object value = ReflectionUtils.getFieldValue(entity, uniqueFieldInfo.getFieldName());
                 message = uniqueFieldInfo.getMessage();
                 if (!Objects.equals(value, uniqueFieldInfo.value)) {
                     isCheck = false;
@@ -124,7 +123,7 @@ public class UniqueFieldUtils {
         List<TableFieldInfo> fieldList = tableInfo.getFieldList();
         List<UniqueFieldInfo> list = new ArrayList<>();
 
-        idVal = ReflectionKit.getFieldValue(entity, tableInfo.getKeyProperty());
+        idVal = ReflectionUtils.getFieldValue(entity, tableInfo.getKeyProperty());
         //筛选UniqueField有的字段
         List<TableFieldInfo> uniqueFieldList = fieldList.stream().filter(tfi -> ObjectUtils.isNotEmpty(tfi.getField().getAnnotation(UniqueField.class)))
                 .collect(Collectors.toList());

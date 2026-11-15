@@ -52,7 +52,7 @@ public class AssociationTableInfo<T> {
         associationTableInfo.setName(modelClass.getSimpleName());
 
         //取mybatis中注册的mapper
-        List<Class<?>> mappers = new ArrayList<>(SqlHelper.sqlSession(modelClass).getConfiguration().getMapperRegistry().getMappers());
+        List<Class<?>> mappers = new ArrayList<>(SqlHelper.FACTORY.getConfiguration().getMapperRegistry().getMappers());
 
         //因为有的实体设置了@TableField(exist = false) 在TableInfo里取不到
         List<Field> fieldList = Arrays.asList(associationTableInfo.getTableClass().getDeclaredFields());

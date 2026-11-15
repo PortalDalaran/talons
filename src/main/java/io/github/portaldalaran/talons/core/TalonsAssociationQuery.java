@@ -24,6 +24,7 @@ import java.util.stream.Collectors;
 /**
  * @author aohee@163.com
  */
+@SuppressWarnings("unchecked")
 public class TalonsAssociationQuery {
     private ObjectFactory<SqlSession> factory;
 

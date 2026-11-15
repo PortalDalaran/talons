@@ -8,7 +8,6 @@ import io.github.portaldalaran.talons.utils.TalonsUtils;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.apache.commons.lang3.StringUtils;
 import org.apache.ibatis.mapping.FetchType;
 
 import java.lang.reflect.Field;
@@ -117,8 +116,8 @@ public class AssociationFieldInfo {
             boolean isAdd = true;
             if (ObjectUtils.isNotEmpty(joinTable)) {
                 for (JoinColumn jc : joinColumns) {
-                    if (StringUtils.equalsIgnoreCase(jc.name(), joinColumn.name())
-                            && StringUtils.equalsIgnoreCase(jc.referencedColumnName(), joinColumn.referencedColumnName())) {
+                    if ((jc.name() == null ? joinColumn.name() == null : jc.name().equalsIgnoreCase(joinColumn.name()))
+                            && (jc.referencedColumnName() == null ? joinColumn.referencedColumnName() == null : jc.referencedColumnName().equalsIgnoreCase(joinColumn.referencedColumnName()))) {
                         isAdd = false;
                     }
                 }
